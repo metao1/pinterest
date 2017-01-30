@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="@color/image_without_palette">
+        <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+            <ImageView
+                    android:id="@+id/item_image_img"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_centerInParent="true"
+                    android:adjustViewBounds="true"
+                    android:transitionName="imageCover"
+                    android:scaleType="fitXY"
+                    android:background="@color/image_without_palette"/>
+            <com.github.lzyzsd.circleprogress.CircleProgress
+                    app:donut_progress="1"
+                    app:donut_unfinished_color="@color/unfinished_progress"
+                    app:donut_finished_color="@color/accent_green"
+                    app:circle_text_size="0dp"
+                    android:id="@+id/activity_detail_progress"
+                    android:layout_width="@dimen/fab_progress"
+                    android:layout_height="@dimen/fab_progress"
+                    android:layout_centerInParent="true"
+                    android:layout_marginRight="@dimen/fab_progress_margin_right"
+                    android:layout_marginTop="@dimen/fab_progress_margin_top"
+                    android:padding="8dp"
+                    android:elevation="0dp"
+            />
+            <ImageButton
+                    android:id="@+id/activity_detail_fab"
+                    android:layout_width="@dimen/fab_normal"
+                    android:layout_height="@dimen/fab_normal"
+                    android:layout_centerInParent="true"
+                    android:layout_marginRight="@dimen/fab_normal_margin_right"
+                    android:layout_marginTop="@dimen/fab_normal_margin_top"
+                    android:padding="8dp"
+                    android:background="@drawable/animated_ripple"
+                    android:elevation="5dp"/>
+
+        </RelativeLayout>
+        <FrameLayout
+                android:id="@+id/item_image_text_container"
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:background="@color/image_without_palette">
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                    android:layout_marginRight="@dimen/activity_horizontal_margin"
+                    android:elevation="10dp"
+                    android:orientation="vertical">
+                <TextView
+                        android:id="@+id/item_image_author"
+                        android:layout_height="wrap_content"
+                        android:layout_width="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:textColor="@color/text_without_palette"
+                        android:lines="1"
+                        android:ellipsize="end"
+                        android:textSize="16sp"
+                        android:text="test"
+                />
+
+                <TextView
+                        android:id="@+id/item_image_date"
+                        android:layout_height="wrap_content"
+                        android:layout_width="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:textColor="@color/text_without_palette"
+                        android:lines="1"
+                        android:ellipsize="end"
+                        android:textSize="15sp"
+                        android:text="test"
+                />
+
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>
