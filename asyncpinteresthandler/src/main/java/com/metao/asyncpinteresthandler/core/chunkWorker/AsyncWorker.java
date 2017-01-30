@@ -1,6 +1,5 @@
 package com.metao.asyncpinteresthandler.core.chunkWorker;
 
-import android.util.Log;
 import com.metao.asyncpinteresthandler.database.elements.Chunk;
 import com.metao.asyncpinteresthandler.database.elements.Task;
 

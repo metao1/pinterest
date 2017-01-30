@@ -26,7 +26,6 @@ import com.metao.asyncpinteresthandler.appConstants.Helper;
 import com.metao.asyncpinteresthandler.core.AsyncHandler;
 import com.metao.asyncpinteresthandler.core.enums.QueueSort;
 import com.metao.asyncpinteresthandler.database.elements.Task;
-import com.metao.asyncpinteresthandler.report.exceptions.QueueDownloadInProgressException;
 import com.metao.asyncpinteresthandler.report.listener.DownloadManagerListener;
 import com.metao.asyncpinteresthandler.repository.Repository;
 import com.metao.asyncpinteresthandler.repository.RepositoryBuilder;
@@ -66,7 +65,7 @@ public class ImagesFragment extends Fragment {
     private JobHandler jobHandler;
     private AsyncHandler asyncHandler;
     private String TAG = "ImagesFragment";
-    private String URL = "http://192.168.1.3/website/img/programs/webcam.jpg";
+    private String URL = "http://avesty.com/img/programs/music.jpg";
     private ImageAdapter mImageAdapter;
     private ArrayList<Image> mImages;
     private ArrayList<Image> mCurrentImages;
@@ -291,6 +290,7 @@ public class ImagesFragment extends Fragment {
                                     Task task = taskIterator.next();
                                     Image image = imageConcurrentHashMap.get(taskId);
                                     image.setBitmap(task.data);
+                                    Log.d("ImageAdapter", String.valueOf(task.data));
                                     images.add(image);
                                 }
                                 imageList.setData(images);
@@ -339,81 +339,14 @@ public class ImagesFragment extends Fragment {
 
     private void onLoadMoreRequest(int page, int totalItemsCount) {
         Log.d(TAG, "on load more");
-        asyncHandler.init(4, new DownloadManagerListener() {
-            @Override
-            public void OnDownloadStarted(String taskId) {
-                Log.d(TAG, String.format("OnDownloadStarted of task %s", String.valueOf(taskId)));
-            }
-
-            @Override
-            public void OnDownloadPaused(String taskId) {
-                Log.d(TAG, String.format("OnDownloadPaused of task %s", String.valueOf(taskId)));
-            }
-
-            @Override
-            public void onDownloadProcess(final String taskId, final double percent, long downloadedLength) {
-                Log.d(TAG, String.format("onDownloadProcess of task %s1:%s2 ", String.valueOf(taskId), String.valueOf(percent)));
-                Iterator<Task> taskIterator = repository.getRamCacheRepository().values().iterator();
-                while (taskIterator.hasNext()) {
-                    Task task = taskIterator.next();
-                    if (task.id.equalsIgnoreCase(taskId)) {
-                        mImageAdapter.setProgress(taskId, percent);
-                    }
-                }
-            }
-
-            @Override
-            public void OnDownloadRebuildFinished(String taskId) {
-                Log.d(TAG, String.format("OnDownloadRebuildFinished of task %s", String.valueOf(taskId)));
-            }
-
-            @Override
-            public void OnDownloadFinished(final String taskId) {
-                Log.d(TAG, String.format("OnDownloadFinished of task %s", String.valueOf(taskId)));
-                Iterator<Task> taskIterator = repository.getRamCacheRepository().values().iterator();
-                ImageList imageList = new ImageList();
-                ArrayList<Image> images = new ArrayList<>();
-                while (taskIterator.hasNext()) {
-                    Task task = taskIterator.next();
-                    Image image = imageConcurrentHashMap.get(taskId);
-                    image.setBitmap(task.data);
-                    images.add(image);
-                }
-                imageList.setData(images);
-                updateAdapter(imageList.getData());
-            }
-
-            @Override
-            public void OnDownloadRebuildStart(String taskId) {
-                Log.d(TAG, String.format("OnDownloadRebuildStart of task %s", String.valueOf(taskId)));
-            }
-
-            @Override
-            public void OnDownloadCompleted(String taskId) {
-                Log.d(TAG, String.format("OnDownloadCompleted of task %s", String.valueOf(taskId)));
-            }
-
-            @Override
-            public void connectionLost(String taskId) {
-
-            }
-        });
-        ArrayList<Image> images = new ArrayList<>();
-        for (int i = 0; i < 4; i++) {
-            Image image = new Image();
-            image.setAuthor("Loading...");
-            image.setImageSrc(URL);
-            String taskId = asyncHandler.addTask(REPOSITORY_NAME, Helper.createNewId()
-                    , image.getUrl(), true, false);
-            image.setTaskId(taskId);
-            images.add(image);
-            imageConcurrentHashMap.put(taskId, image);
-        }
-        try {
-            asyncHandler.startQueueDownload(10, QueueSort.earlierFirst);
-        } catch (QueueDownloadInProgressException e) {
-            e.printStackTrace();
-        }
+        Image image = new Image();
+        image.setAuthor("Loading...");
+        image.setImageSrc(URL);
+        String taskId = asyncHandler.addTask(REPOSITORY_NAME, Helper.createNewId()
+                , image.getUrl(), true, false);
+        image.setTaskId(taskId);
+        imageConcurrentHashMap.put(taskId, image);
+        mImageAdapter.addImage(image);
     }
 
     public static void signalRefresh() {

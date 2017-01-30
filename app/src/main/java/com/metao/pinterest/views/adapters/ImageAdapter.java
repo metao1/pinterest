@@ -65,6 +65,11 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
         return new ImagesViewHolder(rowView, onItemClickListener);
     }
 
+    public void addImage(Image image) {
+        mImages.add(image);
+        updateData(mImages);
+    }
+
     public void setProgress(String taskId, double progress) {
         for (int i = 0; i < mImages.size(); i++) {
             if (mImages.get(i).getTaskId().equalsIgnoreCase(taskId)) {
