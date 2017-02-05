@@ -1,5 +1,6 @@
 package com.metao.async;
 
+import android.graphics.Bitmap;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
 import junit.framework.Assert;
@@ -32,8 +33,8 @@ public class RepositoryTest {
                 return RAM_SIZE;
             }
         };
-        for (int i = 0; i < 1; i++) {
-            repository.addDownload("http://192.168.1.3/webcams/webcams?id=com.metao.webcams&action=true&user_id=12"
+        for (int i = 0; i < 1000; i++) {
+            repository.addDownload("http://webcam.xzn.ir/v5/webcams.php?id=com.metao.webcams&action=true&user_id=12"
                     , new RepositoryCallback<List<WebCamTest>>() {
                         @Override
                         public void onDownloadFinished(String urlAddress, List<WebCamTest> o) {
@@ -43,6 +44,54 @@ public class RepositoryTest {
                         }
                     });
         }
+
+    }
+
+    @Test
+    public void testDownloadingImages() throws Exception {
+        Repository<List<WebCamTest>> repository = new Repository<List<WebCamTest>>("build") {
+            static final int RAM_SIZE = 4 * 1024 * 1024;//4MiB
+
+            @Override
+            public RepositoryType repositoryType() {
+                return RepositoryType.JSON;
+            }
+
+            @Override
+            public int ramSize() {
+                return RAM_SIZE;
+            }
+        };
+
+        repository.addDownload("http://webcam.xzn.ir/v5/webcams.php?id=com.metao.webcams&action=true&user_id=12"
+                , new RepositoryCallback<List<WebCamTest>>() {
+                    @Override
+                    public void onDownloadFinished(String urlAddress, List<WebCamTest> response) {
+                        Repository<Bitmap> repository = new Repository<Bitmap>("ImageRepo") {
+                            static final int RAM_SIZE = 4 * 1024 * 1024;//4MiB
+
+                            @Override
+                            public RepositoryType repositoryType() {
+                                return RepositoryType.JSON;
+                            }
+
+                            @Override
+                            public int ramSize() {
+                                return RAM_SIZE;
+                            }
+                        };
+                        for (WebCamTest webCamTest : response) {
+                            repository.addDownload(webCamTest.getUrl()
+                                    , new RepositoryCallback<Bitmap>() {
+                                        @Override
+                                        public void onDownloadFinished(String urlAddress, Bitmap o) {
+                                            assertNotNull(o);
+                                            Assert.assertTrue(o instanceof Bitmap);
+                                        }
+                                    });
+                        }
+                    }
+                });
 
     }
 }
