@@ -35,10 +35,9 @@ import com.koushikdutta.ion.Response;
 import com.koushikdutta.ion.future.ResponseFuture;
 import com.metao.pinterest.R;
 import com.metao.pinterest.fragments.ImagesFragment;
-import com.metao.pinterest.models.Image;
+import com.metao.pinterest.models.WebCam;
 import com.metao.pinterest.other.CustomAnimatorListener;
 import com.metao.pinterest.other.CustomTransitionListener;
-import com.metao.pinterest.other.PaletteTransformation;
 import com.metao.pinterest.other.Utils;
 import com.mikepenz.fontawesome_typeface_library.FontAwesome;
 import com.mikepenz.iconics.IconicsDrawable;
@@ -62,7 +61,7 @@ public class DetailActivity extends AppCompatActivity {
     private DonutProgress mFabProgress;
     private View mTitleContainer;
     private View mTitlesContainer;
-    private Image mSelectedImage;
+    private WebCam mSelectedImage;
 
     private Drawable mDrawablePhoto;
     private Drawable mDrawableClose;
@@ -301,7 +300,7 @@ public class DetailActivity extends AppCompatActivity {
 
         // Recover items from the intent
         final int position = getIntent().getIntExtra("position", 0);
-        mSelectedImage = (Image) getIntent().getSerializableExtra("selected_image");
+        mSelectedImage = (WebCam) getIntent().getSerializableExtra("selected_image");
 
         mDrawablePhoto = new IconicsDrawable(this, FontAwesome.Icon.faw_photo).color(Color.WHITE).sizeDp(24);
         mDrawableClose = new IconicsDrawable(this, FontAwesome.Icon.faw_close).color(Color.WHITE).sizeDp(24);
@@ -384,25 +383,6 @@ public class DetailActivity extends AppCompatActivity {
 
         if (swatch_rgb != -1 && swatch_title_text_color != -1) {
             setColors(swatch_title_text_color, swatch_rgb);
-        } else {
-            // Generate palette colors
-            Palette palette = PaletteTransformation.getPalette(imageCoverBitmap);
-            if (palette != null) {
-                Palette.Swatch s = palette.getVibrantSwatch();
-                if (s == null) {
-                    s = palette.getDarkVibrantSwatch();
-                }
-                if (s == null) {
-                    s = palette.getLightVibrantSwatch();
-                }
-                if (s == null) {
-                    s = palette.getMutedSwatch();
-                }
-
-                if (s != null) {
-                    setColors(s.getTitleTextColor(), s.getRgb());
-                }
-            }
         }
     }
 
@@ -746,7 +726,7 @@ public class DetailActivity extends AppCompatActivity {
 
         TextView subtitleTV = (TextView) mTitleContainer.findViewById(R.id.activity_detail_subtitle);
         subtitleTV.setTextColor(titleTextColor);
-        subtitleTV.setText(mSelectedImage.getReadableModified_Date());
+        subtitleTV.setText(mSelectedImage.getCreatedAt());
 
         ((TextView) mTitleContainer.findViewById(R.id.activity_detail_subtitle))
                 .setTextColor(titleTextColor);
