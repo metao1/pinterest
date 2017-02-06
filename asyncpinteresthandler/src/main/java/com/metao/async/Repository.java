@@ -37,6 +37,7 @@ public class Repository<T> {
     private final SizeOf<Chunk> sizeOf;
     private Type type;
     private RepositoryCache ramCacheRepository;
+    private RepositoryCache<String, T> cacheRepository;
     private RepositoryType repositoryType = RepositoryType.STRING;
     private RepositoryCacheRamMode ramMode;
     private String repoName;
@@ -46,6 +47,7 @@ public class Repository<T> {
         this.hashCode = type.hashCode();
         this.repoName = repoName;
         ramCacheRepository = new RepositoryCache(RAM_SIZE);
+        cacheRepository = new RepositoryCache(RAM_SIZE);
         ramMode = RepositoryCacheRamMode.ENABLE_WITH_REFERENCE;
         ramSerializer = new RamSerializer();
         sizeOf = new ChunkSize();
@@ -54,8 +56,8 @@ public class Repository<T> {
 
     public Repository<T> addDownload(final String url
             , RepositoryCallback<T> repositoryCallback) {
-        if (contains(url)) {//check cache for data availability
-            T t = get(url);
+        if (cacheRepository.snapshot().containsKey(url)) {//check cache for data availability
+            T t = cacheRepository.snapshot().get(url);
             repositoryCallback.onDownloadFinished(url, t);
             Log.d("tag", "using cache");
         } else {
@@ -74,7 +76,7 @@ public class Repository<T> {
             messageArg.setUrl(url);
             downloadHandler = new DownloadHandler<>();
             downloadHandler.setRepoCallback(repositoryCallback);
-            downloadHandler.setCacheRepository();
+            downloadHandler.setCacheRepository(cacheRepository);
             downloadHandler.setTaskRepository();
             downloadHandler.setChunkRepository();
             downloadHandler.execute(messageArg);
@@ -128,18 +130,15 @@ public class Repository<T> {
     }
 
     public String put(String key, T object) {
-        if (!ramCacheRepository.contains(key)) {
-            if (ramMode.equals(RepositoryCacheRamMode.ENABLE_WITH_REFERENCE)) {
-                assert ramCacheRepository != null;
-                Log.d("cache", key + " store into cache");
-                ramCacheRepository.put(key, object);
-                Log.d("cache", key + " store size:" + ramCacheRepository.size());
-            }
-            String ramSerialized = null;
-            if (ramMode.equals(RepositoryCacheRamMode.ENABLE_WITH_SPECIFIC_SERIALIZER)) {
-                ramSerialized = ramSerializer.toString(object);
-                ramCacheRepository.put(key, ramSerialized);
-            }
+        if (ramMode.equals(RepositoryCacheRamMode.ENABLE_WITH_REFERENCE)) {
+            assert ramCacheRepository != null;
+            Log.d("cache", key + " store into cache");
+            ramCacheRepository.put(key, object);
+        }
+        String ramSerialized = null;
+        if (ramMode.equals(RepositoryCacheRamMode.ENABLE_WITH_SPECIFIC_SERIALIZER)) {
+            ramSerialized = ramSerializer.toString(object);
+            ramCacheRepository.put(key, ramSerialized);
         }
         return Helper.createNewId();
     }
@@ -179,7 +178,7 @@ public class Repository<T> {
     }
 
     public boolean contains(String key) {
-        if (!ramMode.equals(RepositoryCacheRamMode.DISABLE) && ramCacheRepository.contains(key)) {
+        if (!ramMode.equals(RepositoryCacheRamMode.DISABLE) && ramCacheRepository.snapshot().containsKey(key)) {
             return true;
         }
         return false;

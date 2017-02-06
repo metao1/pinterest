@@ -37,17 +37,16 @@
                     android:padding="8dp"
                     android:elevation="0dp"
             />
-            <ImageButton
-                    android:id="@+id/activity_detail_fab"
-                    android:layout_width="@dimen/fab_normal"
-                    android:layout_height="@dimen/fab_normal"
-                    android:layout_centerInParent="true"
-                    android:layout_marginRight="@dimen/fab_normal_margin_right"
-                    android:layout_marginTop="@dimen/fab_normal_margin_top"
-                    android:padding="8dp"
-                    android:background="@drawable/animated_ripple"
-                    android:elevation="5dp"/>
-
+            <!--    <ImageButton
+                        android:id="@+id/activity_detail_fab"
+                        android:layout_width="@dimen/fab_normal"
+                        android:layout_height="@dimen/fab_normal"
+                        android:layout_centerInParent="true"
+                        android:layout_marginRight="@dimen/fab_normal_margin_right"
+                        android:layout_marginTop="@dimen/fab_normal_margin_top"
+                        android:padding="8dp"
+                        android:background="@drawable/animated_ripple"
+                        android:elevation="5dp"/>-->
         </RelativeLayout>
         <FrameLayout
                 android:id="@+id/item_image_text_container"

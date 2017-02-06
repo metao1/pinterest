@@ -14,6 +14,7 @@ import com.metao.async.download.database.elements.Chunk;
 import com.metao.async.download.database.elements.Task;
 import com.metao.async.download.report.listener.DownloadManagerListener;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -37,6 +38,7 @@ public class DownloadHandler<T> {
     private Repository<Task> taskRepository;
     private AsyncDownloadHandler asyncDownloadHandler;
     private Repository<Chunk> chunkRepository;
+    private RepositoryCache<String, T> ramCacheRepository;
 
     DownloadHandler() {
         Log.d("tag", "starting thread...");
@@ -82,8 +84,8 @@ public class DownloadHandler<T> {
         };
     }
 
-    public void setCacheRepository() {
-
+    public void setCacheRepository(RepositoryCache<String, T> ramCacheRepository) {
+        this.ramCacheRepository = ramCacheRepository;
     }
 
     private class ThreadHandler extends Thread {
@@ -97,12 +99,11 @@ public class DownloadHandler<T> {
                     this.setName(ThreadHandler.class.getName());
                     this.setPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
                     final Repository.RepositoryType jobRepositoryType = messageArg.getJobRepositoryType();
+                    final Type messageType = messageArg.getType();
                     final String urlAddress = messageArg.getUrl();
                     if (urlAddress == null) {
                         throw new Exception("no argument specified for url");
                     }
-
-                    final MessageArg finalMessageArg = messageArg;
                     if (asyncDownloadHandler == null) {
                         asyncDownloadHandler = new AsyncDownloadHandler(chunkRepository, taskRepository);
                     }
@@ -119,10 +120,13 @@ public class DownloadHandler<T> {
 
                         @Override
                         public void onDownloadProgress(String taskId, double percent, long downloadedLength) {
+                            MessageArg finalMessageArg = new MessageArg(taskId);
+                            finalMessageArg.setUrl(urlAddress);
                             Message message = new Message();
                             Bundle bundle = new Bundle();
                             bundle.putString("type", "onDownloadProgress");
                             finalMessageArg.setObject(percent);
+                            finalMessageArg.setType(messageType);
                             bundle.putSerializable("message", finalMessageArg);
                             message.setData(bundle);
                             mainUIHandler.sendMessage(message);
@@ -148,24 +152,28 @@ public class DownloadHandler<T> {
                             Collection<Task> values = taskRepository.getRamCacheRepository().snapshot().values();
                             for (Task task : values) {
                                 if (task.id.equalsIgnoreCase(taskId)) {
+                                    MessageArg finalMessageArg = new MessageArg(taskId);
+                                    finalMessageArg.setUrl(urlAddress);
                                     byte[] bytes = task.data;
                                     if (jobRepositoryType == Repository.RepositoryType.JSON) {
                                         String response = new String(bytes);
+                                        finalMessageArg.setType(messageType);
                                         T t = gson.fromJson(response, finalMessageArg.getType());
-                                        //cacheRepository.put(urlAddress, t);
+                                        ramCacheRepository.put(urlAddress, t);
                                         finalMessageArg.setObject(t);
                                     } else {
                                         Bitmap image = BitmapConverter.getImage(bytes);
                                         finalMessageArg.setObject(image);
+                                        ramCacheRepository.put(urlAddress, (T) image);
                                     }
+                                    Message message = new Message();
+                                    Bundle bundle = new Bundle();
+                                    bundle.putString("type", "onDownloadCompleted");
+                                    bundle.putSerializable("message", finalMessageArg);
+                                    message.setData(bundle);
+                                    mainUIHandler.sendMessage(message);
                                 }
                             }
-                            Message message = new Message();
-                            Bundle bundle = new Bundle();
-                            bundle.putString("type", "onDownloadCompleted");
-                            bundle.putSerializable("message", finalMessageArg);
-                            message.setData(bundle);
-                            mainUIHandler.sendMessage(message);
                         }
 
                         @Override

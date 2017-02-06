@@ -117,7 +117,6 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickLi
     protected final ImageView imageView;
     protected final TextView imageAuthor;
     protected final TextView imageDate;
-    private ImageView mFabButton;
     private CircleProgress mFabProgress;
     private Drawable mDrawableClose;
     private Drawable mDrawableSuccess;
@@ -149,8 +148,6 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickLi
      */
     public void onDone() {
         mFabProgress.setVisibility(View.GONE);
-        mFabButton.setVisibility(View.GONE);
-
     }
 
     public void onProgress(double downloaded, long total) {
@@ -168,11 +165,6 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickLi
         mFabProgress.setScaleX(1);
         mFabProgress.setScaleY(2);
         mFabProgress.setProgress(40);
-        // Fab button
-        mFabButton = (ImageView) view.findViewById(R.id.activity_detail_fab);
-        mFabButton.setScaleX(1);
-        mFabButton.setScaleY(2);
-        mFabButton.setImageDrawable(mDrawableClose);
     }
 
     @Override
