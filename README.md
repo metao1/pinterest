@@ -54,7 +54,7 @@ repository.addDownload(JSON_API_URL_ADDRESS
     }
 });
 ```                
-### Downloading each Image Separately after getting them in  Adapter              
+### Downloading each Image Separately after having them in  Adapter              
 ```java
 repository.addDownload(IMAGE_URL_ADDRESS
     , new RepositoryCallback<Bitmap>() {
@@ -68,7 +68,7 @@ repository.addDownload(IMAGE_URL_ADDRESS
         }
                     
         public void onDownloadProgress(String urlAddress, double progress) {
-        // Showing progress for each image 
+            // Showing progress for each image 
         }
 });
 ```
