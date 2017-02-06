@@ -38,19 +38,6 @@ The Chunks use for parallel downloading big files from the net.
 
 ### Adding a task to download the service data into our repository
 ```java
-Repository<Bitmap> repository = new Repository<Bitmap>("ImageRepo") {
-    static final int RAM_SIZE = 400 * 1024 * 1024;//400MiB
-
-    @Override
-    public RepositoryType repositoryType() {
-        return RepositoryType.BITMAP;//Repository type
-    }
-
-    @Override
-    public int ramSize() {
-        return RAM_SIZE;
-    }
-};
 repository.addDownload(JSON_API_URL_ADDRESS
     , new RepositoryCallback<List<Model>>() {
     @Override
@@ -69,7 +56,19 @@ repository.addDownload(JSON_API_URL_ADDRESS
 ```                
 ### Downloading each Image Separately after having them in  Adapter              
 ```java
+Repository<Bitmap> repository = new Repository<Bitmap>("ImageRepo") {
+    static final int RAM_SIZE = 400 * 1024 * 1024;//400MiB
 
+    @Override
+    public RepositoryType repositoryType() {
+        return RepositoryType.BITMAP;//Repository type
+    }
+
+    @Override
+    public int ramSize() {
+        return RAM_SIZE;
+    }
+};
 repository.addDownload(IMAGE_URL_ADDRESS
     , new RepositoryCallback<Bitmap>() {
         @Override
