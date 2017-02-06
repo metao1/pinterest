@@ -23,7 +23,7 @@ Repository<List<Model>> repository = new Repository<List<Model>>("ServiceRepo") 
 
     @Override
     public RepositoryType repositoryType() {
-        return RepositoryType.JSON;//webservice type
+        return RepositoryType.JSON;//Repostiroy type (Restfull Webservice)
     }
 
     @Override
@@ -38,6 +38,19 @@ The Chunks use for parallel downloading big files from the net.
 
 ### Adding a task to download the service data into our repository
 ```java
+Repository<Bitmap> repository = new Repository<Bitmap>("ImageRepo") {
+    static final int RAM_SIZE = 400 * 1024 * 1024;//400MiB
+
+    @Override
+    public RepositoryType repositoryType() {
+        return RepositoryType.BITMAP;//Repository type
+    }
+
+    @Override
+    public int ramSize() {
+        return RAM_SIZE;
+    }
+};
 repository.addDownload(JSON_API_URL_ADDRESS
     , new RepositoryCallback<List<Model>>() {
     @Override
@@ -56,6 +69,7 @@ repository.addDownload(JSON_API_URL_ADDRESS
 ```                
 ### Downloading each Image Separately after having them in  Adapter              
 ```java
+
 repository.addDownload(IMAGE_URL_ADDRESS
     , new RepositoryCallback<Bitmap>() {
         @Override
@@ -71,4 +85,18 @@ repository.addDownload(IMAGE_URL_ADDRESS
             // Showing progress for each image 
         }
 });
+```
+
+#### Repository Types for option:
+
+Repository types could be either of the followings:  
+
+```java 
+public enum RepositoryType {
+        JSON(1), // A Restfull JSON WebService
+        XML(2),// A SOAP WebService
+        NORMAL(3),//byte array as the output
+        BITMAP(4),//Bitmap conversion of an Image
+        STRING(5);//String conversion on an Object       
+    }
 ```
