@@ -18,19 +18,19 @@ The AsyncPinterestHandler is resposible to store data in a repository, for sake 
 
 ### Setting options for our Repository (RAM SIZE,SERVICE TYPE,etc) 
 ```java  
-    Repository<List<WebCam>> repository = new Repository<List<Model>>("ServiceRepo") {
-            static final int RAM_SIZE = 4 * 1024 * 1024;//4MiB
+Repository<List<Model>> repository = new Repository<List<Model>>("ServiceRepo") {
+    static final int RAM_SIZE = 4 * 1024 * 1024;//4MiB
 
-            @Override
-            public RepositoryType repositoryType() {
-                return RepositoryType.JSON;//webservice type
-            }
+    @Override
+    public RepositoryType repositoryType() {
+        return RepositoryType.JSON;//webservice type
+    }
 
-            @Override
-            public int ramSize() {
-                return RAM_SIZE;
-            }
-        };
+    @Override
+    public int ramSize() {
+        return RAM_SIZE;
+    }
+};
 ```
 
 The AsyncPinterestHandler uses chunks (MAX number of chunks is configurable into codes- for now 4 chunks as default)
@@ -38,21 +38,21 @@ The Chunks use for parallel downloading big files from the net.
 
 ### Adding a task to download the service data into our repository
 ```java
-    repository.addDownload(JSON_API_URL_ADDRESS
-                , new RepositoryCallback<List<Model>>() {
-                    @Override
-                    public void onDownloadFinished(String urlAddress, List<Model> response) {
-                        //Maybe set data to Adapters
-                    }
+repository.addDownload(JSON_API_URL_ADDRESS
+    , new RepositoryCallback<List<Model>>() {
+    @Override
+    public void onDownloadFinished(String urlAddress, List<Model> response) {
+        //Maybe set data to Adapters
+    }
                     
-                    public void onError(Throwable error) {
-                        //Raise an error message
-                    }
+    public void onError(Throwable error) {
+        //Raise an error message
+    }
                     
-                    public void onDownloadProgress(String urlAddress, double progress) {
-                        // Showing progress if the service supports
-                    }
-                });
+    public void onDownloadProgress(String urlAddress, double progress) {
+        // Showing progress if the service supports
+    }
+});
 ```                
 ### Downloading each Image Separately after getting them in  Adapter              
 ```java
