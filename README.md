@@ -17,7 +17,7 @@ The AsyncPinterestHandler is resposible to store data in a repository, for sake 
 # Usage
 
 ### Setting options for our Repository (RAM SIZE,SERVICE TYPE,etc) 
-    
+```java  
     Repository<List<WebCam>> repository = new Repository<List<Model>>("ServiceRepo") {
             static final int RAM_SIZE = 4 * 1024 * 1024;//4MiB
 
@@ -31,11 +31,13 @@ The AsyncPinterestHandler is resposible to store data in a repository, for sake 
                 return RAM_SIZE;
             }
         };
+```
 
 The AsyncPinterestHandler uses chunks (MAX number of chunks is configurable into codes- for now 4 chunks as default)
 The Chunks use for parallel downloading big files from the net.
 
 ### Adding a task to download the service data into our repository
+```java
     repository.addDownload(JSON_API_URL_ADDRESS
                 , new RepositoryCallback<List<Model>>() {
                     @Override
@@ -51,7 +53,7 @@ The Chunks use for parallel downloading big files from the net.
                         // Showing progress if the service supports
                     }
                 });
-                
+```                
 ### Downloading each Image Separately after getting them in  Adapter              
 ```java
 repository.addDownload(IMAGE_URL_ADDRESS
