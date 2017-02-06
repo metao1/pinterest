@@ -34,7 +34,6 @@ public class DownloadHandler<T> {
     private LinkedBlockingQueue<MessageArg> messageArgs = new LinkedBlockingQueue<>();
     private ArrayList<RepositoryCallback<T>> callbacks = new ArrayList<>();
     private static Handler mainUIHandler;
-    private Repository<Object> cacheRepository;
     private Repository<Task> taskRepository;
     private AsyncDownloadHandler asyncDownloadHandler;
     private Repository<Chunk> chunkRepository;
@@ -84,9 +83,6 @@ public class DownloadHandler<T> {
     }
 
     public void setCacheRepository() {
-        this.cacheRepository = new Repository<Object>("CacheRepository") {
-
-        };
 
     }
 
@@ -105,94 +101,80 @@ public class DownloadHandler<T> {
                     if (urlAddress == null) {
                         throw new Exception("no argument specified for url");
                     }
-                    if (cacheRepository.contains(urlAddress)) {
-                        Object t = cacheRepository.get(urlAddress);
-                        if (t instanceof Bitmap) {
-                            Log.d("DownloadHandler", "using cache");
-                            messageArg.setObject(t);
+
+                    final MessageArg finalMessageArg = messageArg;
+                    if (asyncDownloadHandler == null) {
+                        asyncDownloadHandler = new AsyncDownloadHandler(chunkRepository, taskRepository);
+                    }
+                    asyncDownloadHandler.init(MAX_CHUNKS, new DownloadManagerListener() {
+                        @Override
+                        public void OnDownloadStarted(String taskId) {
+
+                        }
+
+                        @Override
+                        public void OnDownloadPaused(String taskId) {
+
+                        }
+
+                        @Override
+                        public void onDownloadProgress(String taskId, double percent, long downloadedLength) {
                             Message message = new Message();
                             Bundle bundle = new Bundle();
-                            bundle.putString("type", "onDownloadCompleted");
-                            bundle.putSerializable("message", messageArg);
+                            bundle.putString("type", "onDownloadProgress");
+                            finalMessageArg.setObject(percent);
+                            bundle.putSerializable("message", finalMessageArg);
                             message.setData(bundle);
                             mainUIHandler.sendMessage(message);
                         }
-                    } else {
-                        final MessageArg finalMessageArg = messageArg;
-                        if (asyncDownloadHandler == null) {
-                            asyncDownloadHandler = new AsyncDownloadHandler(chunkRepository, taskRepository);
+
+                        @Override
+                        public void OnDownloadFinished(String taskId) {
+
                         }
-                        asyncDownloadHandler.init(MAX_CHUNKS, new DownloadManagerListener() {
-                            @Override
-                            public void OnDownloadStarted(String taskId) {
 
-                            }
+                        @Override
+                        public void OnDownloadRebuildStart(String taskId) {
 
-                            @Override
-                            public void OnDownloadPaused(String taskId) {
+                        }
 
-                            }
+                        @Override
+                        public void OnDownloadRebuildFinished(String taskId) {
 
-                            @Override
-                            public void onDownloadProgress(String taskId, double percent, long downloadedLength) {
-                                Message message = new Message();
-                                Bundle bundle = new Bundle();
-                                bundle.putString("type", "onDownloadProgress");
-                                finalMessageArg.setObject(percent);
-                                bundle.putSerializable("message", finalMessageArg);
-                                message.setData(bundle);
-                                mainUIHandler.sendMessage(message);
-                            }
+                        }
 
-                            @Override
-                            public void OnDownloadFinished(String taskId) {
-
-                            }
-
-                            @Override
-                            public void OnDownloadRebuildStart(String taskId) {
-
-                            }
-
-                            @Override
-                            public void OnDownloadRebuildFinished(String taskId) {
-
-                            }
-
-                            @Override
-                            public void OnDownloadCompleted(String taskId) {
-                                Collection<Task> values = taskRepository.getRamCacheRepository().snapshot().values();
-                                for (Task task : values) {
-                                    if (task.id.equalsIgnoreCase(taskId)) {
-                                        byte[] bytes = task.data;
-                                        if (jobRepositoryType == Repository.RepositoryType.JSON) {
-                                            String response = new String(bytes);
-                                            T t = gson.fromJson(response, finalMessageArg.getType());
-                                            //cacheRepository.put(urlAddress, t);
-                                            finalMessageArg.setObject(t);
-                                        } else {
-                                            Bitmap image = BitmapConverter.getImage(bytes);
-                                            cacheRepository.put(urlAddress, image);
-                                            finalMessageArg.setObject(image);
-                                        }
+                        @Override
+                        public void OnDownloadCompleted(String taskId) {
+                            Collection<Task> values = taskRepository.getRamCacheRepository().snapshot().values();
+                            for (Task task : values) {
+                                if (task.id.equalsIgnoreCase(taskId)) {
+                                    byte[] bytes = task.data;
+                                    if (jobRepositoryType == Repository.RepositoryType.JSON) {
+                                        String response = new String(bytes);
+                                        T t = gson.fromJson(response, finalMessageArg.getType());
+                                        //cacheRepository.put(urlAddress, t);
+                                        finalMessageArg.setObject(t);
+                                    } else {
+                                        Bitmap image = BitmapConverter.getImage(bytes);
+                                        finalMessageArg.setObject(image);
                                     }
                                 }
-                                Message message = new Message();
-                                Bundle bundle = new Bundle();
-                                bundle.putString("type", "onDownloadCompleted");
-                                bundle.putSerializable("message", finalMessageArg);
-                                message.setData(bundle);
-                                mainUIHandler.sendMessage(message);
                             }
+                            Message message = new Message();
+                            Bundle bundle = new Bundle();
+                            bundle.putString("type", "onDownloadCompleted");
+                            bundle.putSerializable("message", finalMessageArg);
+                            message.setData(bundle);
+                            mainUIHandler.sendMessage(message);
+                        }
 
-                            @Override
-                            public void connectionLost(String taskId) {
+                        @Override
+                        public void connectionLost(String taskId) {
 
-                            }
-                        });
-                        asyncDownloadHandler.addTask(REPOSITORY_NAME, urlAddress, urlAddress, MAX_CHUNKS, OVERWRITE, PRIORITY);
-                        asyncDownloadHandler.startQueueDownload(DOWNLOAD_TASKS_PER_TIME, SORT_TYPE);
-                    }
+                        }
+                    });
+                    asyncDownloadHandler.addTask(REPOSITORY_NAME, urlAddress, urlAddress, MAX_CHUNKS, OVERWRITE, PRIORITY);
+                    asyncDownloadHandler.startQueueDownload(DOWNLOAD_TASKS_PER_TIME, SORT_TYPE);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

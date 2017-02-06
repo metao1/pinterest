@@ -1,1 +1,1 @@
-include ':app', ':asyncpinteresthandler', ':demo'
+include ':app', ':asyncpinteresthandler'

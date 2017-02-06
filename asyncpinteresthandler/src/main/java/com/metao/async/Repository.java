@@ -66,8 +66,6 @@ public class Repository<T> {
                 case ENABLE_WITH_REFERENCE:
                     this.ramCacheRepository = new ReferenceRepositoryCache<>(RAM_SIZE, sizeOf);
                     break;
-                default:
-                    this.ramCacheRepository = null;
             }
             String taskId = UUID.randomUUID().toString();
             MessageArg messageArg = new MessageArg(taskId);
@@ -135,6 +133,7 @@ public class Repository<T> {
                 assert ramCacheRepository != null;
                 Log.d("cache", key + " store into cache");
                 ramCacheRepository.put(key, object);
+                Log.d("cache", key + " store size:" + ramCacheRepository.size());
             }
             String ramSerialized = null;
             if (ramMode.equals(RepositoryCacheRamMode.ENABLE_WITH_SPECIFIC_SERIALIZER)) {

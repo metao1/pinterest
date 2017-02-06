@@ -8,7 +8,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,7 +25,7 @@ import com.mikepenz.iconics.IconicsDrawable;
 
 import java.util.ArrayList;
 
-public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
+public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder>{
 
     private Context mContext;
     private ArrayList<WebCam> mImages;
@@ -73,19 +72,13 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(final ImagesViewHolder imagesViewHolder, final int position) {
+    public void onBindViewHolder(final ImagesViewHolder imagesViewHolder, int position) {
         final WebCam currentImage = mImages.get(position);
         imagesViewHolder.imageAuthor.setText(currentImage.getName());
         imagesViewHolder.imageDate.setText(currentImage.getCreatedAt());
         imagesViewHolder.imageAuthor.setTextColor(mDefaultTextColor);
         imagesViewHolder.imageDate.setTextColor(mDefaultTextColor);
         imagesViewHolder.imageTextContainer.setBackgroundColor(mDefaultBackgroundColor);
-        imagesViewHolder.imageTextContainer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onItemClickListener.onClick(v, position);
-            }
-        });
         imagesViewHolder.imageView.setImageBitmap(BitmapFactory.decodeResource(mContext.getResources(),
                 R.drawable.header));
         imagesViewHolder.imageView.setOnClickListener(imagesViewHolder);
@@ -115,6 +108,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
     public int getItemCount() {
         return mImages.size();
     }
+
 }
 
 class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {

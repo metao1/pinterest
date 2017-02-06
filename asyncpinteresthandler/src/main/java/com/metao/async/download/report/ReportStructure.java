@@ -63,7 +63,9 @@ public class ReportStructure {
         if (task.state != TaskStates.DOWNLOAD_FINISHED) {
             int sum = 0;
             for (Chunk chunk : chunks) {
-                //this.downloadLength += FileUtils.size(task.objectRepository, String.valueOf(chunk.id));
+                if(chunk.data != null) {
+                    this.downloadLength += chunk.data.length;
+                }
             }
 
             if (task.size > 0) {

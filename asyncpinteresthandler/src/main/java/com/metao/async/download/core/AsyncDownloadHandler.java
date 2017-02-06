@@ -172,7 +172,6 @@ public class AsyncDownloadHandler {
             report.setObjectValues(task, taskChunks);
             return report;
         }
-
         return null;
     }
 
@@ -210,7 +209,6 @@ public class AsyncDownloadHandler {
         reportList = readyTaskList(lastCompleted);
         return reportList;
     }
-
 
     private List<ReportStructure> readyTaskList(List<Task> tasks) {
         List<ReportStructure> reportList = new ArrayList<ReportStructure>();
@@ -256,13 +254,6 @@ public class AsyncDownloadHandler {
 
         return false;
     }
-
-
-    /**
-     * close db connection
-     * if your activity goes to paused or stop state
-     * you have to call this method to disconnect from db
-     */
 
     private List<Task> uncompleted() {
         return tasksDataSource.getUnCompletedTasks(QueueSort.oldestFirst);

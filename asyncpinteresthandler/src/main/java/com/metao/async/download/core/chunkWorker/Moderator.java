@@ -150,14 +150,11 @@ public class Moderator {
         workerList.remove(chunk.id);
         List<Chunk> taskChunks =
                 chunksDataSource.chunksRelatedTask(chunk.taskId); // delete itself from worker list
-
         for (Chunk ch : taskChunks) {
             if (workerList.get(ch.id) != null)
                 return;
         }
-
         Task task = tasksDataSource.getTaskInfo(chunk.taskId);
-
         // set state task state to finished
         task.state = TaskStates.DOWNLOAD_FINISHED;
         tasksDataSource.update(task);
