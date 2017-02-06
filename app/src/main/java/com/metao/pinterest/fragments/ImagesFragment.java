@@ -138,8 +138,8 @@ public class ImagesFragment extends Fragment {
                         mImageRecycler.setVisibility(View.VISIBLE);
                         mImagesErrorView.setVisibility(View.GONE);
                         mImageAdapter = new ImageAdapter((ArrayList<WebCam>) response);
-                        mImageAdapter.setOnItemClickListener(recyclerRowClickListener);
                         mCurrentImages = (ArrayList<WebCam>) response;
+                        mImageAdapter.setOnItemClickListener(recyclerRowClickListener);
                         mImageRecycler.setAdapter(mImageAdapter);
                     }
 

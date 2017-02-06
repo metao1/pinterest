@@ -25,7 +25,7 @@ import com.mikepenz.iconics.IconicsDrawable;
 
 import java.util.ArrayList;
 
-public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder>{
+public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
 
     private Context mContext;
     private ArrayList<WebCam> mImages;
@@ -155,7 +155,9 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickLi
         if (progress < 1) {
             progress = progress + 1;
         }
-        mFabProgress.setProgress(progress);
+        if (mFabProgress.getProgress() < progress) {
+            mFabProgress.setProgress(progress);
+        }
     }
 
     private void initDownload(View view) {
@@ -163,7 +165,7 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickLi
         mFabProgress = (CircleProgress) view.findViewById(R.id.activity_detail_progress);
         mFabProgress.setMax(100);
         mFabProgress.setScaleX(1);
-        mFabProgress.setScaleY(2);
+        mFabProgress.setScaleY(1);
         mFabProgress.setProgress(40);
     }
 
