@@ -53,20 +53,20 @@ The Chunks use for parallel downloading big files from the net.
                 });
                 
 ### Downloading each Image Separately after getting them in  Adapter              
-    
-    repository.addDownload(IMAGE_URL_ADDRESS
-                , new RepositoryCallback<Bitmap>() {
-                    @Override
-                    public void onDownloadFinished(String urlAddress, Bitmap imageBitmap) {
-                        // Load bitmap into our ImageView
-                    }
+```java
+repository.addDownload(IMAGE_URL_ADDRESS
+    , new RepositoryCallback<Bitmap>() {
+        @Override
+        public void onDownloadFinished(String urlAddress, Bitmap imageBitmap) {
+            // Load bitmap into our ImageView
+        }
                     
-                    public void onError(Throwable error) {
-                        //Raise an error message
-                    }
+        public void onError(Throwable error) {
+            //Raise an error message
+        }
                     
-                    public void onDownloadProgress(String urlAddress, double progress) {
-                        // Showing progress for each image 
-                    }
-                });
-                
+        public void onDownloadProgress(String urlAddress, double progress) {
+        // Showing progress for each image 
+        }
+});
+```
