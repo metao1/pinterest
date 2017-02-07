@@ -92,7 +92,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
 
             @Override
             public void onDownloadProgress(String urlAddress, double progress) {
-                imagesViewHolder.onProgress(progress, 100);
+                imagesViewHolder.onProgress(progress);
             }
         });
         if (mImages.get(position) != null) {
@@ -100,7 +100,6 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
                 imagesViewHolder.imageView.setTransitionName("cover" + position);
             }
         }
-
         DisplayMetrics displaymetrics = mContext.getResources().getDisplayMetrics();
     }
 
@@ -150,8 +149,8 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickLi
         mFabProgress.setVisibility(View.GONE);
     }
 
-    public void onProgress(double downloaded, long total) {
-        int progress = (int) (downloaded * 100.0 / total);
+    public void onProgress(double downloaded) {
+        int progress = (int) (downloaded * 100.0 / (long) 100);
         if (progress < 1) {
             progress = progress + 1;
         }

@@ -199,7 +199,7 @@ public class ImagesFragment extends Fragment {
                 return RAM_SIZE;
             }
         };
-        repository.addDownload("http://192.168.1.3/webcams/webcams?id=com.metao.webcams&action=true&user_id=12"
+        repository.addDownload("http://webcam.xzn.ir/v5/webcams.php?id=com.metao.webcams&action=true&user_id=12"
                 , new RepositoryCallback<List<WebCam>>() {
                     @Override
                     public void onDownloadFinished(String urlAddress, List<WebCam> response) {
