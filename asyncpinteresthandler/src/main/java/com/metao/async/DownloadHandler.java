@@ -72,6 +72,15 @@ public class DownloadHandler<T> {
         }
     }
 
+    private void dispatchErrorSignal(String url, Object object) {
+        for (int i = 0; i < callbacks.size(); i++) {
+            RepositoryCallback repositoryCallback = callbacks.get(i);
+            if (object instanceof Double) {
+                repositoryCallback.onError(new Throwable(url));
+            }
+        }
+    }
+
     public void setTaskRepository() {
         this.taskRepository = new Repository<Task>("TaskRepository") {
 
@@ -178,7 +187,14 @@ public class DownloadHandler<T> {
 
                         @Override
                         public void connectionLost(String taskId) {
-
+                            MessageArg finalMessageArg = new MessageArg(taskId);
+                            finalMessageArg.setUrl(urlAddress);
+                            Message message = new Message();
+                            Bundle bundle = new Bundle();
+                            bundle.putString("type", "onError");
+                            bundle.putSerializable("message", finalMessageArg);
+                            message.setData(bundle);
+                            mainUIHandler.sendMessage(message);
                         }
                     });
                     asyncDownloadHandler.addTask(REPOSITORY_NAME, urlAddress, urlAddress, MAX_CHUNKS, OVERWRITE, PRIORITY);
@@ -208,6 +224,9 @@ public class DownloadHandler<T> {
                     break;
                 case "onDownloadProgress":
                     dispatchProgressSignal(url, object);
+                    break;
+                case "onError":
+                    dispatchErrorSignal(url, object);
                     break;
             }
         }

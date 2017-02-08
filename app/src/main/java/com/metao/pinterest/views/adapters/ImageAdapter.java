@@ -6,12 +6,13 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
-import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.github.lzyzsd.circleprogress.CircleProgress;
@@ -19,11 +20,13 @@ import com.metao.async.Repository;
 import com.metao.async.RepositoryCallback;
 import com.metao.pinterest.R;
 import com.metao.pinterest.listeners.OnItemClickListener;
+import com.metao.pinterest.listeners.OnStatusClickListener;
 import com.metao.pinterest.models.WebCam;
 import com.mikepenz.fontawesome_typeface_library.FontAwesome;
 import com.mikepenz.iconics.IconicsDrawable;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
 
@@ -34,6 +37,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
     private int mDefaultBackgroundColor;
 
     private OnItemClickListener onItemClickListener;
+
     private Repository<Bitmap> repository = new Repository<Bitmap>("Image") {
         @Override
         public Repository.RepositoryType repositoryType() {
@@ -53,9 +57,15 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
         this.onItemClickListener = onItemClickListener;
     }
 
-    public void updateData(ArrayList<WebCam> images) {
-        this.mImages = images;
-        notifyDataSetChanged();
+    public void updateData(final List<WebCam> images) {
+        this.mImages.addAll(images);
+        Handler handler = new Handler();
+        final Runnable r = new Runnable() {
+            public void run() {
+                notifyDataSetChanged();
+            }
+        };
+        handler.post(r);
     }
 
     @Override
@@ -74,6 +84,9 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
     @Override
     public void onBindViewHolder(final ImagesViewHolder imagesViewHolder, int position) {
         final WebCam currentImage = mImages.get(position);
+        if (currentImage == null) {
+            return;
+        }
         imagesViewHolder.imageAuthor.setText(currentImage.getName());
         imagesViewHolder.imageDate.setText(currentImage.getCreatedAt());
         imagesViewHolder.imageAuthor.setTextColor(mDefaultTextColor);
@@ -94,28 +107,54 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
             public void onDownloadProgress(String urlAddress, double progress) {
                 imagesViewHolder.onProgress(progress);
             }
+
+            @Override
+            public void onError(Throwable throwable) {
+                imagesViewHolder.onError(currentImage.getThumbUrl());
+            }
+        });
+        imagesViewHolder.setOnStatusClickListener(new OnStatusClickListener() {
+            @Override
+            public void onClick(View v, String url) {
+                repository.addDownload(url, new RepositoryCallback<Bitmap>() {
+                    @Override
+                    public void onDownloadFinished(String urlAddress, Bitmap bitmap) {
+                        imagesViewHolder.imageView.setImageBitmap(bitmap);
+                        imagesViewHolder.onDone();
+                    }
+
+                    @Override
+                    public void onDownloadProgress(String urlAddress, double progress) {
+                        imagesViewHolder.onProgress(progress);
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+                        imagesViewHolder.onError(currentImage.getThumbUrl());
+                    }
+                });
+            }
         });
         if (mImages.get(position) != null) {
             if (Build.VERSION.SDK_INT >= 21) {
                 imagesViewHolder.imageView.setTransitionName("cover" + position);
             }
         }
-        DisplayMetrics displaymetrics = mContext.getResources().getDisplayMetrics();
     }
 
     @Override
     public int getItemCount() {
         return mImages.size();
     }
-
 }
 
 class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-    protected final FrameLayout imageTextContainer;
-    protected final ImageView imageView;
-    protected final TextView imageAuthor;
-    protected final TextView imageDate;
+    final FrameLayout imageTextContainer;
+    final ImageView imageView;
+    final TextView imageAuthor;
+    final TextView imageDate;
+    final ImageButton statusButton;
     private CircleProgress mFabProgress;
     private Drawable mDrawableClose;
     private Drawable mDrawableSuccess;
@@ -123,6 +162,8 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickLi
     private Drawable mDrawableError;
 
     private final OnItemClickListener onItemClickListener;
+    private String errorUrl;
+    private OnStatusClickListener onStatusClickListener;
 
     public ImagesViewHolder(View itemView, OnItemClickListener onItemClickListener) {
         super(itemView);
@@ -131,6 +172,8 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickLi
         imageView = (ImageView) itemView.findViewById(R.id.item_image_img);
         imageAuthor = (TextView) itemView.findViewById(R.id.item_image_author);
         imageDate = (TextView) itemView.findViewById(R.id.item_image_date);
+        statusButton = (ImageButton) itemView.findViewById(R.id.status_fab);
+        statusButton.setOnClickListener(this);
         mDrawableClose = new IconicsDrawable(itemView.getContext()
                 , FontAwesome.Icon.faw_close).color(Color.WHITE).sizeDp(14);
         mDrawableSuccess = new IconicsDrawable(itemView.getContext()
@@ -145,11 +188,11 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickLi
     /**
      * A test to tell the adapter that we done with data
      */
-    public void onDone() {
+    void onDone() {
         mFabProgress.setVisibility(View.GONE);
     }
 
-    public void onProgress(double downloaded) {
+    void onProgress(double downloaded) {
         int progress = (int) (downloaded * 100.0 / (long) 100);
         if (progress < 1) {
             progress = progress + 1;
@@ -170,7 +213,22 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickLi
 
     @Override
     public void onClick(View v) {
-        onItemClickListener.onClick(v, getPosition());
+        if (v.getId() == R.id.status_fab && errorUrl != null) {
+            this.onStatusClickListener.onClick(v, errorUrl);
+        } else {
+            onItemClickListener.onClick(v, getPosition());
+        }
+    }
+
+    void setOnStatusClickListener(OnStatusClickListener onStatusClickListener) {
+        this.onStatusClickListener = onStatusClickListener;
+    }
+
+    void onError(String errorUrl) {
+        this.errorUrl = errorUrl;
+        statusButton.setVisibility(View.VISIBLE);
+        statusButton.setImageDrawable(mDrawableError);
+        mFabProgress.setVisibility(View.GONE);
     }
 }
 

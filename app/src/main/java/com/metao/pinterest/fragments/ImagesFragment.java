@@ -10,7 +10,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.SparseArray;
@@ -24,32 +24,30 @@ import com.metao.async.Repository;
 import com.metao.async.RepositoryCallback;
 import com.metao.pinterest.R;
 import com.metao.pinterest.activities.DetailActivity;
-import com.metao.pinterest.async.JobHandler;
 import com.metao.pinterest.listeners.EndlessRecycleViewListener;
 import com.metao.pinterest.listeners.OnItemClickListener;
 import com.metao.pinterest.models.WebCam;
 import com.metao.pinterest.views.adapters.ImageAdapter;
 import tr.xip.errorview.ErrorView;
+import tr.xip.errorview.RetryListener;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ImagesFragment extends Fragment {
 
-    private static final String JSON_API = "http://webcam.xzn.ir/v5/webcams.php?id=com.metao.webcams&action=true&user_id=12";
+    private static final String VPS = "http://webcam.xzn.ir/v5/webcams.php?id=com.metao.webcams&action=true&user_id=12";
     public static SparseArray<Bitmap> photoCache = new SparseArray<>(1);
-
-    private JobHandler jobHandler;
     private String TAG = "ImagesFragment";
     private ImageAdapter mImageAdapter;
-    private ArrayList<WebCam> mImages;
-    private ArrayList<WebCam> mCurrentImages;
     private RecyclerView mImageRecycler;
     private ProgressBar mImagesProgress;
     private ErrorView mImagesErrorView;
     private static ImagesFragment instance;
     private StaggeredGridLayoutManager staggeredGridLayoutManager;
-    private ImageAdapter imageAdapter;
+    private WebCam[] webCams;
+    private int counter;
 
     @Override
     public void onDestroy() {
@@ -60,7 +58,7 @@ public class ImagesFragment extends Fragment {
 
         @Override
         public void onClick(View v, int position) {
-            WebCam selectedImage = mCurrentImages.get(position);
+            WebCam selectedImage = webCams[position];
             Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
             detailIntent.putExtra("position", position);
             detailIntent.putExtra("selected_image", selectedImage);
@@ -74,7 +72,7 @@ public class ImagesFragment extends Fragment {
                 }
             }
             if (coverImage != null && coverImage.getDrawable() != null) {
-                Bitmap bitmap = ((BitmapDrawable) coverImage.getDrawable()).getBitmap(); //ew
+                Bitmap bitmap = ((BitmapDrawable) coverImage.getDrawable()).getBitmap();
                 if (bitmap != null && !bitmap.isRecycled()) {
                     photoCache.put(position, bitmap);
                     ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(getActivity(), coverImage, "cover");
@@ -86,7 +84,6 @@ public class ImagesFragment extends Fragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        jobHandler = new JobHandler();
         instance = this;
         showAll();
     }
@@ -98,77 +95,25 @@ public class ImagesFragment extends Fragment {
         mImageRecycler.setHasFixedSize(true);
         mImageRecycler.setItemAnimator(new DefaultItemAnimator());
         staggeredGridLayoutManager = newStaggeredGridLayoutManager();
-        EndlessRecycleViewListener endlessRecycleViewListener = new EndlessRecycleViewListener(staggeredGridLayoutManager) {
+        mImageRecycler.setLayoutManager(staggeredGridLayoutManager);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mImageRecycler.getContext());
+        mImageRecycler.setLayoutManager(linearLayoutManager);
+        EndlessRecycleViewListener endlessRecycleViewListener = new EndlessRecycleViewListener(linearLayoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount) {
-                onLoadMoreRequest(page, totalItemsCount);
+                onLoadMoreRequest();
             }
         };
-        endlessRecycleViewListener.setVisibleThreshold(10);
         mImageRecycler.addOnScrollListener(endlessRecycleViewListener);
-        mImageRecycler.setLayoutManager(staggeredGridLayoutManager);
         mImagesProgress = (ProgressBar) rootView.findViewById(R.id.fragment_images_progress);
         mImagesErrorView = (ErrorView) rootView.findViewById(R.id.fragment_images_error_view);
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(), 1);
-        mImageRecycler.setLayoutManager(gridLayoutManager);
         mImageRecycler.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 return false;
             }
         });
-        final Repository<List<WebCam>> repository = new Repository<List<WebCam>>("ImageRepo") {
-            static final int RAM_SIZE = 4 * 1024 * 1024;//4MiB
-
-            @Override
-            public RepositoryType repositoryType() {
-                return RepositoryType.JSON;
-            }
-
-            @Override
-            public int ramSize() {
-                return RAM_SIZE;
-            }
-        };
-        repository.addDownload(JSON_API
-                , new RepositoryCallback<List<WebCam>>() {
-                    @Override
-                    public void onDownloadFinished(String urlAddress, List<WebCam> response) {
-                        mImagesProgress.setVisibility(View.GONE);
-                        mImageRecycler.setVisibility(View.VISIBLE);
-                        mImagesErrorView.setVisibility(View.GONE);
-                        mImageAdapter = new ImageAdapter((ArrayList<WebCam>) response);
-                        mCurrentImages = (ArrayList<WebCam>) response;
-                        mImageAdapter.setOnItemClickListener(recyclerRowClickListener);
-                        mImageRecycler.setAdapter(mImageAdapter);
-                    }
-
-                    @Override
-                    public void onError(Throwable error) {
-                       /*/ if (error instanceof RetrofitError) {
-                            RetrofitError e = (RetrofitError) error;
-                            if (e.getKind() == RetrofitError.Kind.NETWORK) {
-                                mImagesErrorView.setErrorTitle(R.string.error_network);
-                                mImagesErrorView.setErrorSubtitle(R.string.error_network_subtitle);
-                            } else if (e.getKind() == RetrofitError.Kind.HTTP) {
-                                mImagesErrorView.setErrorTitle(R.string.error_server);
-                                mImagesErrorView.setErrorSubtitle(R.string.error_server_subtitle);
-                            } else {
-                                mImagesErrorView.setErrorTitle(R.string.error_uncommon);
-                                mImagesErrorView.setErrorSubtitle(R.string.error_uncommon_subtitle);
-                            }
-                        }
-                        mImagesProgress.setVisibility(View.GONE);
-                        mImageRecycler.setVisibility(View.GONE);
-                        mImagesErrorView.setVisibility(View.VISIBLE);
-                        mImagesErrorView.setOnRetryListener(new RetryListener() {
-                            @Override
-                            public void onRetry() {
-                                showAll();
-                            }
-                        });*/
-                    }
-                });
+        fetchImages();
         return rootView;
     }
 
@@ -176,8 +121,8 @@ public class ImagesFragment extends Fragment {
      * a small helper class to update the adapter
      */
     private void showAll() {
-        if (mImages != null) {
-            updateAdapter(mImages);
+        if (webCams != null) {
+            updateAdapter(webCams);
         } else {
             mImagesProgress.setVisibility(View.VISIBLE);
             mImageRecycler.setVisibility(View.GONE);
@@ -199,26 +144,40 @@ public class ImagesFragment extends Fragment {
                 return RAM_SIZE;
             }
         };
-        repository.addDownload("http://webcam.xzn.ir/v5/webcams.php?id=com.metao.webcams&action=true&user_id=12"
+        repository.addDownload(VPS
                 , new RepositoryCallback<List<WebCam>>() {
                     @Override
                     public void onDownloadFinished(String urlAddress, List<WebCam> response) {
                         mImagesProgress.setVisibility(View.GONE);
                         mImageRecycler.setVisibility(View.VISIBLE);
                         mImagesErrorView.setVisibility(View.GONE);
-                        imageAdapter = new ImageAdapter((ArrayList<WebCam>) response);
+                        webCams = new ArrayList<>(response).toArray(new WebCam[response.size()]);
+                        WebCam[] lowWebCams = Arrays.copyOfRange(webCams, 0, 5);
+                        List<WebCam> webCams = Arrays.asList(lowWebCams);
+                        mImageAdapter = new ImageAdapter(new ArrayList<>(webCams));
+                        mImageAdapter.setOnItemClickListener(recyclerRowClickListener);
+                        mImageRecycler.setAdapter(mImageAdapter);
                     }
 
                     @Override
                     public void onError(Throwable error) {
-
+                        mImagesErrorView.setErrorTitle(R.string.error_network);
+                        mImagesErrorView.setErrorSubtitle(R.string.error_network_subtitle);
+                        mImagesProgress.setVisibility(View.GONE);
+                        mImageRecycler.setVisibility(View.GONE);
+                        mImagesErrorView.setVisibility(View.VISIBLE);
+                        mImagesErrorView.setOnRetryListener(new RetryListener() {
+                            @Override
+                            public void onRetry() {
+                                showAll();
+                            }
+                        });
                     }
                 });
     }
 
-    private void updateAdapter(ArrayList<WebCam> images) {
-        mCurrentImages = images;
-        mImageAdapter.updateData(mCurrentImages);
+    private void updateAdapter(WebCam[] images) {
+        mImageAdapter.updateData(Arrays.asList(images));
     }
 
     @NonNull
@@ -226,8 +185,17 @@ public class ImagesFragment extends Fragment {
         return new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
     }
 
-    private void onLoadMoreRequest(int page, int totalItemsCount) {
-
+    private void onLoadMoreRequest() {
+        WebCam[] lowWebCams;
+        if (counter + 5 > webCams.length) {
+            lowWebCams = Arrays.copyOfRange(webCams, counter, webCams.length);
+        } else {
+            counter += 5;
+            lowWebCams = Arrays.copyOfRange(webCams, counter, counter + 5);
+        }
+        if (lowWebCams != null) {
+            updateAdapter(lowWebCams);
+        }
     }
 
     public static void signalRefresh() {
