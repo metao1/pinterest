@@ -11,6 +11,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -35,6 +37,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
     private int mScreenWidth;
     private int mDefaultTextColor;
     private int mDefaultBackgroundColor;
+    private int lastPosition = -1;
 
     private OnItemClickListener onItemClickListener;
 
@@ -96,6 +99,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
                 R.drawable.header));
         imagesViewHolder.imageView.setOnClickListener(imagesViewHolder);
         WebCam webCam = mImages.get(position);
+        setAnimation(imagesViewHolder.imageView, position);
         repository.addDownload(webCam.getThumbUrl(), new RepositoryCallback<Bitmap>() {
             @Override
             public void onDownloadFinished(String urlAddress, Bitmap bitmap) {
@@ -139,6 +143,14 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
             if (Build.VERSION.SDK_INT >= 21) {
                 imagesViewHolder.imageView.setTransitionName("cover" + position);
             }
+        }
+    }
+
+    private void setAnimation(ImageView viewToAnimate, int position) {
+        if (position > lastPosition) {
+            Animation animation = AnimationUtils.loadAnimation(mContext, R.anim.bottom_to_top);
+            viewToAnimate.startAnimation(animation);
+            lastPosition = position;
         }
     }
 
