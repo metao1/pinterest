@@ -1,7 +1,6 @@
 package com.metao.async.download.core.mainWorker;
 
-import android.util.Log;
-import com.metao.async.Repository;
+import com.metao.async.repository.Repository;
 import com.metao.async.download.Utils.QueueObserver;
 import com.metao.async.download.core.chunkWorker.Moderator;
 import com.metao.async.download.database.ChunksDataSource;

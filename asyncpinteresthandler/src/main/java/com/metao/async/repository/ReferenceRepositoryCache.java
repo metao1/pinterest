@@ -1,4 +1,4 @@
-package com.metao.async;
+package com.metao.async.repository;
 
 /**
  * This is the LRU cache used for the RAM layer when configured to used references.

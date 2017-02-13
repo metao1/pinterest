@@ -1,7 +1,7 @@
 package com.metao.async.download.core.chunkWorker;
 
 import android.util.Log;
-import com.metao.async.Repository;
+import com.metao.async.repository.Repository;
 import com.metao.async.download.core.enums.TaskStates;
 import com.metao.async.download.core.mainWorker.QueueModerator;
 import com.metao.async.download.database.ChunksDataSource;
@@ -11,21 +11,24 @@ import com.metao.async.download.database.elements.Task;
 import com.metao.async.download.report.ReportStructure;
 import com.metao.async.download.report.listener.DownloadManagerListenerModerator;
 
-
 import java.util.HashMap;
 import java.util.List;
 
 public class Moderator {
 
     private final Repository<Task> repository;
+    private final int THRESHOLD = 1024 * 20;
+    public DownloadManagerListenerModerator downloadManagerListener;
     private ChunksDataSource chunksDataSource;  // query on chunk table
     private TasksDataSource tasksDataSource;    // query on task table
-    public DownloadManagerListenerModerator downloadManagerListener;
-
     private HashMap<Integer, Thread> workerList;          // chunk downloader list
     private HashMap<String, ReportStructure> processReports;  // to save download percent
-
     private QueueModerator finishedDownloadQueueObserver;
+    /*
+    to calculate download percentage
+    if download task is un resumable it return -1 as percent
+     */
+    private int downloadByteThreshold = 0;
 
     public Moderator(Repository<Task> repository, TasksDataSource tasksDS, ChunksDataSource chunksDS) {
         tasksDataSource = tasksDS;
@@ -64,7 +67,7 @@ public class Moderator {
                 if (!task.resumable) {
                     chunk.begin = 0;
                     chunk.end = 0;
-                    // start one chunk as AsyncTask (duplicate code!! :( )                    
+                    // start one chunk as AsyncTask (duplicate code!! :( )
                     Thread chunkDownloaderThread = new AsyncWorker(task, chunk, this);
                     workerList.put(chunk.id, chunkDownloaderThread);
                     chunkDownloaderThread.start();
@@ -121,13 +124,6 @@ public class Moderator {
     public void connectionLost(String taskId) {
         downloadManagerListener.ConnectionLost(taskId);
     }
-
-    /*
-    to calculate download percentage
-    if download task is un resumable it return -1 as percent
-     */
-    private int downloadByteThreshold = 0;
-    private final int THRESHOLD = 1024 * 20;
 
     public void process(String taskId, long byteRead) {
         ReportStructure report = processReports.get(taskId);

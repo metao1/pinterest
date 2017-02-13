@@ -18,8 +18,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.github.lzyzsd.circleprogress.CircleProgress;
-import com.metao.async.Repository;
-import com.metao.async.RepositoryCallback;
+import com.metao.async.repository.ImageViewHolder;
+import com.metao.async.repository.Repository;
 import com.metao.pinterest.R;
 import com.metao.pinterest.listeners.OnItemClickListener;
 import com.metao.pinterest.listeners.OnStatusClickListener;
@@ -100,45 +100,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
         imagesViewHolder.imageView.setOnClickListener(imagesViewHolder);
         WebCam webCam = mImages.get(position);
         setAnimation(imagesViewHolder.imageView, position);
-        repository.addDownload(webCam.getThumbUrl(), new RepositoryCallback<Bitmap>() {
-            @Override
-            public void onDownloadFinished(String urlAddress, Bitmap bitmap) {
-                imagesViewHolder.imageView.setImageBitmap(bitmap);
-                imagesViewHolder.onDone();
-            }
-
-            @Override
-            public void onDownloadProgress(String urlAddress, double progress) {
-                imagesViewHolder.onProgress(progress);
-            }
-
-            @Override
-            public void onError(Throwable throwable) {
-                imagesViewHolder.onError(currentImage.getThumbUrl());
-            }
-        });
-        imagesViewHolder.setOnStatusClickListener(new OnStatusClickListener() {
-            @Override
-            public void onClick(View v, String url) {
-                repository.addDownload(url, new RepositoryCallback<Bitmap>() {
-                    @Override
-                    public void onDownloadFinished(String urlAddress, Bitmap bitmap) {
-                        imagesViewHolder.imageView.setImageBitmap(bitmap);
-                        imagesViewHolder.onDone();
-                    }
-
-                    @Override
-                    public void onDownloadProgress(String urlAddress, double progress) {
-                        imagesViewHolder.onProgress(progress);
-                    }
-
-                    @Override
-                    public void onError(Throwable throwable) {
-                        imagesViewHolder.onError(currentImage.getThumbUrl());
-                    }
-                });
-            }
-        });
+        repository.downloadBitmap(webCam.getThumbUrl(), imagesViewHolder);
         if (mImages.get(position) != null) {
             if (Build.VERSION.SDK_INT >= 21) {
                 imagesViewHolder.imageView.setTransitionName("cover" + position);
@@ -160,7 +122,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
     }
 }
 
-class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+class ImagesViewHolder extends ImageViewHolder implements View.OnClickListener {
 
     final FrameLayout imageTextContainer;
     final ImageView imageView;
@@ -200,11 +162,16 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickLi
     /**
      * A test to tell the adapter that we done with data
      */
-    void onDone() {
+    public void onDone() {
         mFabProgress.setVisibility(View.GONE);
     }
 
-    void onProgress(double downloaded) {
+    @Override
+    public void onError() {
+
+    }
+
+    public void onProgress(double downloaded) {
         int progress = (int) (downloaded * 100.0 / (long) 100);
         if (progress < 1) {
             progress = progress + 1;
@@ -212,6 +179,11 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements View.OnClickLi
         if (mFabProgress.getProgress() < progress) {
             mFabProgress.setProgress(progress);
         }
+    }
+
+    @Override
+    public void setImageResult(Bitmap bitmap) {
+        imageView.setImageBitmap(bitmap);
     }
 
     private void initDownload(View view) {

@@ -1,4 +1,4 @@
-package com.metao.async;
+package com.metao.async.repository;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -15,15 +15,15 @@ import java.io.ByteArrayOutputStream;
  */
 public final class BitmapConverter {
 
+    private BitmapConverter() throws InstantiationException {
+        throw new InstantiationException("This class is not for instantiation");
+    }
+
     public static String toBase64(Bitmap bitmap) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
         byte[] bytes = baos.toByteArray();
         return Base64.encodeToString(bytes, Base64.NO_WRAP);
-    }
-
-    private BitmapConverter() throws InstantiationException {
-        throw new InstantiationException("This class is not for instantiation");
     }
 
     // convert from bitmap to byte array

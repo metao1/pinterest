@@ -1,4 +1,4 @@
-package com.metao.async;
+package com.metao.async.repository;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
@@ -6,7 +6,7 @@ import java.lang.reflect.Type;
 /**
  * Created by metao on 1/2/2017.
  */
-public class MessageArg implements Serializable{
+public class MessageArg implements Serializable {
 
     private final String id;
     private String url;
@@ -46,11 +46,11 @@ public class MessageArg implements Serializable{
         this.object = object;
     }
 
-    public void setType(Type type) {
-        this.type = type;
-    }
-
     public Type getType() {
         return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
     }
 }

@@ -1,4 +1,4 @@
-package com.metao.async;
+package com.metao.async.repository;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.metao.async; /**
+package com.metao.async.repository; /**
  * Created by metao on 2/1/2017.
  */
 
@@ -48,15 +48,6 @@ public class WebCamTest implements Serializable {
         this.longitude = longitude;
     }
 
-    // setters
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public void setUniId(long uniId) {
-        this.uniId = uniId;
-    }
-
     public void setIsStream(boolean isStream) {
         this.isStream = isStream;
     }
@@ -73,65 +64,22 @@ public class WebCamTest implements Serializable {
         this.sku = sku;
     }
 
-    public void setType(int type) {
-        this.type = type;
-    }
-
-    public void setName(String webCamName) {
-        this.webCamName = webCamName;
-    }
-
-    public void setTags(String webCamTags) {
-        this.webCamTags = webCamTags;
-    }
-
-    public void setUrl(String webCamUrl) {
-        this.webCamUrl = webCamUrl;
-    }
-
-    public void setThumbUrl(String webCamThumbUrl) {
-        this.webCamThumbUrl = webCamThumbUrl;
-    }
-
-    public void setPosition(int position) {
-        this.position = position;
-    }
-
-    public void setStatus(int status) {
-        this.status = status;
-    }
-
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
-    }
-
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
-    public void setPopular(boolean popular) {
-        this.popular = popular;
-    }
-
-    public void setCreatedAt(String created_at) {
-        this.created_at = created_at;
-    }
-
-    public void setSelected(boolean selected) {
-        this.selected = selected;
-    }
-
     // getters
     public long getId() {
         return this.id;
     }
 
+    // setters
+    public void setId(long id) {
+        this.id = id;
+    }
+
     public long getUniId() {
         return this.uniId;
+    }
+
+    public void setUniId(long uniId) {
+        this.uniId = uniId;
     }
 
     public boolean isStream() {
@@ -146,8 +94,16 @@ public class WebCamTest implements Serializable {
         return this.type;
     }
 
+    public void setType(int type) {
+        this.type = type;
+    }
+
     public String getName() {
         return this.webCamName;
+    }
+
+    public void setName(String webCamName) {
+        this.webCamName = webCamName;
     }
 
     public String getTags() {
@@ -156,14 +112,26 @@ public class WebCamTest implements Serializable {
         } else return EMPTY_STRING;
     }
 
+    public void setTags(String webCamTags) {
+        this.webCamTags = webCamTags;
+    }
+
     public String getUrl() {
         return this.webCamUrl;
+    }
+
+    public void setUrl(String webCamUrl) {
+        this.webCamUrl = webCamUrl;
     }
 
     public String getThumbUrl() {
         if (webCamThumbUrl != null) {
             return this.webCamThumbUrl;
         } else return EMPTY_STRING;
+    }
+
+    public void setThumbUrl(String webCamThumbUrl) {
+        this.webCamThumbUrl = webCamThumbUrl;
     }
 
     public String getWebCamTimeLapseDay() {
@@ -186,32 +154,64 @@ public class WebCamTest implements Serializable {
         return this.position;
     }
 
+    public void setPosition(int position) {
+        this.position = position;
+    }
+
     public int getStatus() {
         return this.status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 
     public double getLatitude() {
         return this.latitude;
     }
 
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
     public double getLongitude() {
         return this.longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
     }
 
     public String getCountry() {
         return this.country;
     }
 
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
     public boolean isPopular() {
         return this.popular;
+    }
+
+    public void setPopular(boolean popular) {
+        this.popular = popular;
     }
 
     public String getCreatedAt() {
         return this.created_at;
     }
 
+    public void setCreatedAt(String created_at) {
+        this.created_at = created_at;
+    }
+
     public boolean isSelected() {
         return this.selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
     }
 
     public long getRequested() {

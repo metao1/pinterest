@@ -1,4 +1,4 @@
-package com.metao.async;
+package com.metao.async.repository;
 
 /**
  * Define the behaviour of the RAM layer.

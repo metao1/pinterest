@@ -1,8 +1,7 @@
 package com.metao.async.download.database;
 
-import android.util.Log;
-import com.metao.async.Repository;
-import com.metao.async.RepositoryCache;
+import com.metao.async.repository.Repository;
+import com.metao.async.repository.RepositoryCache;
 import com.metao.async.download.core.enums.QueueSort;
 import com.metao.async.download.core.enums.TaskStates;
 import com.metao.async.download.database.elements.Task;

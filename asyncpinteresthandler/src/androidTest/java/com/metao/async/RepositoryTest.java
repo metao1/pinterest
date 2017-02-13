@@ -3,6 +3,9 @@ package com.metao.async;
 import android.graphics.Bitmap;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
+import com.metao.async.repository.Repository;
+import com.metao.async.repository.RepositoryCallback;
+import com.metao.async.repository.WebCamTest;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,7 +37,7 @@ public class RepositoryTest {
             }
         };
         for (int i = 0; i < 1000; i++) {
-            repository.addDownload("http://webcam.xzn.ir/v5/webcams.php?id=com.metao.webcams&action=true&user_id=12"
+            repository.addService("http://webcam.xzn.ir/v5/webcams.php?id=com.metao.webcams&action=true&user_id=12"
                     , new RepositoryCallback<List<WebCamTest>>() {
                         @Override
                         public void onDownloadFinished(String urlAddress, List<WebCamTest> o) {
@@ -63,7 +66,7 @@ public class RepositoryTest {
             }
         };
 
-        repository.addDownload("http://webcam.xzn.ir/v5/webcams.php?id=com.metao.webcams&action=true&user_id=12"
+        repository.addService("http://webcam.xzn.ir/v5/webcams.php?id=com.metao.webcams&action=true&user_id=12"
                 , new RepositoryCallback<List<WebCamTest>>() {
                     @Override
                     public void onDownloadFinished(String urlAddress, List<WebCamTest> response) {
@@ -81,7 +84,7 @@ public class RepositoryTest {
                             }
                         };
                         for (WebCamTest webCamTest : response) {
-                            repository.addDownload(webCamTest.getUrl()
+                            repository.addService(webCamTest.getUrl()
                                     , new RepositoryCallback<Bitmap>() {
                                         @Override
                                         public void onDownloadFinished(String urlAddress, Bitmap o) {

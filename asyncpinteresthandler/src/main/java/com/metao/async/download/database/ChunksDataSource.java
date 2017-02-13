@@ -1,6 +1,6 @@
 package com.metao.async.download.database;
 
-import com.metao.async.Repository;
+import com.metao.async.repository.Repository;
 import com.metao.async.download.database.elements.Chunk;
 import com.metao.async.download.database.elements.Task;
 

@@ -18,8 +18,9 @@ public class AsyncWorker extends Thread {
     private final Task task;
     private final Chunk chunk;
     private final Moderator observer;
-    private ConnectionWatchDog watchDog;
     public boolean stop = false;
+    private ConnectionWatchDog watchDog;
+    private boolean flag = true;
 
     public AsyncWorker(Task task, Chunk chunk, Moderator moderator) {
         this.task = task;
@@ -84,8 +85,6 @@ public class AsyncWorker extends Thread {
     private void pauseRelatedTask() {
         observer.pause(task.id);
     }
-
-    private boolean flag = true;
 
     public void connectionTimeOut() {
         if (flag) {

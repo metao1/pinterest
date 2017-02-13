@@ -20,8 +20,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import com.metao.async.Repository;
-import com.metao.async.RepositoryCallback;
+import com.metao.async.repository.Repository;
+import com.metao.async.repository.RepositoryCallback;
 import com.metao.pinterest.R;
 import com.metao.pinterest.activities.DetailActivity;
 import com.metao.pinterest.listeners.EndlessRecycleViewListener;
@@ -144,7 +144,7 @@ public class ImagesFragment extends Fragment {
                 return RAM_SIZE;
             }
         };
-        repository.addDownload(VPS
+        repository.addService(VPS
                 , new RepositoryCallback<List<WebCam>>() {
                     @Override
                     public void onDownloadFinished(String urlAddress, List<WebCam> response) {

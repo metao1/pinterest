@@ -1,4 +1,4 @@
-package com.metao.async;
+package com.metao.async.repository;
 
 /**
  * Created by metao on 12/31/2016.

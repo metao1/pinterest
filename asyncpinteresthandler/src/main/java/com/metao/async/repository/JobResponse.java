@@ -1,4 +1,4 @@
-package com.metao.async;
+package com.metao.async.repository;
 
 import java.io.Serializable;
 
@@ -13,10 +13,6 @@ public class JobResponse implements Serializable {
         this.jobRepositoryType = jobRepositoryType;
     }
 
-    public void setJobObject(Object jobObject) {
-        this.jobObject = jobObject;
-    }
-
     public Repository.RepositoryType getJobRepositoryType() {
         return jobRepositoryType;
     }
@@ -27,5 +23,9 @@ public class JobResponse implements Serializable {
 
     public Object getJobObject() {
         return jobObject;
+    }
+
+    public void setJobObject(Object jobObject) {
+        this.jobObject = jobObject;
     }
 }

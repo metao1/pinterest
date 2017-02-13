@@ -25,7 +25,7 @@ public class ConnectionWatchDog extends Thread {
     /**
      * Creates a timer of a specified length
      *
-     * @param    length    Length of time before timeout occurs
+     * @param length Length of time before timeout occurs
      */
     public ConnectionWatchDog(int length, AsyncWorker thread) {
         // Assign to member variable

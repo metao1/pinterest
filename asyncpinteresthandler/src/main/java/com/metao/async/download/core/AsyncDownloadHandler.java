@@ -1,7 +1,7 @@
 package com.metao.async.download.core;
 
 import android.util.Log;
-import com.metao.async.Repository;
+import com.metao.async.repository.Repository;
 import com.metao.async.download.core.chunkWorker.Moderator;
 import com.metao.async.download.core.enums.QueueSort;
 import com.metao.async.download.core.enums.TaskStates;
@@ -23,8 +23,8 @@ import java.util.List;
 
 public class AsyncDownloadHandler {
 
-    private final int MAX_CHUNKS = 16;
     static int maximumUserChunks;
+    private final int MAX_CHUNKS = 16;
     private Moderator moderator;
     private TasksDataSource tasksDataSource;
     private ChunksDataSource chunksDataSource;
