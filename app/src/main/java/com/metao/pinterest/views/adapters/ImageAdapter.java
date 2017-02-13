@@ -18,8 +18,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.github.lzyzsd.circleprogress.CircleProgress;
-import com.metao.async.repository.ImageViewHolder;
 import com.metao.async.repository.Repository;
+import com.metao.async.repository.RepositoryCallbackInterface;
 import com.metao.pinterest.R;
 import com.metao.pinterest.listeners.OnItemClickListener;
 import com.metao.pinterest.listeners.OnStatusClickListener;
@@ -100,7 +100,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
         imagesViewHolder.imageView.setOnClickListener(imagesViewHolder);
         WebCam webCam = mImages.get(position);
         setAnimation(imagesViewHolder.imageView, position);
-        repository.downloadBitmap(webCam.getThumbUrl(), imagesViewHolder);
+        repository.downloadBitmapIntoViewHolder(webCam.getThumbUrl(), imagesViewHolder);
         if (mImages.get(position) != null) {
             if (Build.VERSION.SDK_INT >= 21) {
                 imagesViewHolder.imageView.setTransitionName("cover" + position);
@@ -122,7 +122,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
     }
 }
 
-class ImagesViewHolder extends ImageViewHolder implements View.OnClickListener {
+class ImagesViewHolder extends RecyclerView.ViewHolder implements RepositoryCallbackInterface<Bitmap>, View.OnClickListener {
 
     final FrameLayout imageTextContainer;
     final ImageView imageView;
@@ -159,33 +159,6 @@ class ImagesViewHolder extends ImageViewHolder implements View.OnClickListener {
         initDownload(itemView);
     }
 
-    /**
-     * A test to tell the adapter that we done with data
-     */
-    public void onDone() {
-        mFabProgress.setVisibility(View.GONE);
-    }
-
-    @Override
-    public void onError() {
-
-    }
-
-    public void onProgress(double downloaded) {
-        int progress = (int) (downloaded * 100.0 / (long) 100);
-        if (progress < 1) {
-            progress = progress + 1;
-        }
-        if (mFabProgress.getProgress() < progress) {
-            mFabProgress.setProgress(progress);
-        }
-    }
-
-    @Override
-    public void setImageResult(Bitmap bitmap) {
-        imageView.setImageBitmap(bitmap);
-    }
-
     private void initDownload(View view) {
         // Fab progress
         mFabProgress = (CircleProgress) view.findViewById(R.id.activity_detail_progress);
@@ -208,11 +181,31 @@ class ImagesViewHolder extends ImageViewHolder implements View.OnClickListener {
         this.onStatusClickListener = onStatusClickListener;
     }
 
-    void onError(String errorUrl) {
+    @Override
+    public void onDownloadFinished(String urlAddress, Bitmap bitmap) {
+        imageView.setImageBitmap(bitmap);
+        /**
+         * To tell the adapter that we done with data
+         */
+        mFabProgress.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
         this.errorUrl = errorUrl;
         statusButton.setVisibility(View.VISIBLE);
         statusButton.setImageDrawable(mDrawableError);
         mFabProgress.setVisibility(View.GONE);
     }
-}
 
+    @Override
+    public void onDownloadProgress(String urlAddress, double progress) {
+        int intProgress = (int) (progress * 100.0 / (long) 100);
+        if (intProgress < 1) {
+            intProgress = intProgress + 1;
+        }
+        if (mFabProgress.getProgress() < intProgress) {
+            mFabProgress.setProgress(intProgress);
+        }
+    }
+}

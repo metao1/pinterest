@@ -2,6 +2,7 @@ package com.metao.async.repository;
 
 import android.graphics.Bitmap;
 import android.util.Log;
+import android.widget.ImageView;
 import com.metao.async.download.appConstants.Helper;
 import com.metao.async.download.database.elements.Chunk;
 
@@ -22,7 +23,8 @@ public class Repository<T> {
     private DownloadHandler<Bitmap> bitmapDownloadHandler;
     private Type type;
     private RepositoryCache ramCacheRepository;
-    private RepositoryCache<String, ImageViewHolder> viewHolderCacheRepository;
+    private RepositoryCache<String, RepositoryCallbackInterface<Bitmap>> viewHolderCacheRepository;
+    private RepositoryCache<String, ImageView> imageViewRepositoryCache;
     private RepositoryCache<String, Bitmap> bitmapCacheRepository;
     private RepositoryCache<String, T> serviceCacheRepository;
     private RepositoryType repositoryType = RepositoryType.STRING;
@@ -37,6 +39,7 @@ public class Repository<T> {
         viewHolderCacheRepository = new RepositoryCache<>(RAM_SIZE);
         serviceCacheRepository = new RepositoryCache(RAM_SIZE);
         bitmapCacheRepository = new RepositoryCache(RAM_SIZE);
+        imageViewRepositoryCache = new RepositoryCache<>(RAM_SIZE);
         ramMode = RepositoryCacheRamMode.ENABLE_WITH_REFERENCE;
         ramSerializer = new RamSerializer();
         sizeOf = new ChunkSize();
@@ -73,7 +76,7 @@ public class Repository<T> {
             messageArg.setType(getType());
             messageArg.setUrl(url);
             serviceDownloadHandler = new DownloadHandler<>();
-            serviceDownloadHandler.setRepoCallback(repositoryCallback);
+            serviceDownloadHandler.setRepoCallback(url, repositoryCallback);
             serviceDownloadHandler.setCacheRepository(serviceCacheRepository);
             serviceDownloadHandler.setTaskRepository();
             serviceDownloadHandler.setChunkRepository();
@@ -82,43 +85,64 @@ public class Repository<T> {
         return this;
     }
 
-    public Repository<T> downloadBitmap(final String url, ImageViewHolder viewHolder) {
-        viewHolderCacheRepository.put(url, viewHolder);
+    public Repository<T> downloadBitmap(final String url, ImageView imageView) {
+        imageViewRepositoryCache.put(url, imageView);
         if (bitmapCacheRepository.snapshot().containsKey(url)) {//check cache for data availability
             Bitmap bitmap = bitmapCacheRepository.snapshot().get(url);
             if (bitmap != null) {
-                viewHolderCacheRepository.get(url).setImageResult(bitmap);
-                viewHolderCacheRepository.get(url).onDone();
+                imageViewRepositoryCache.get(url).setImageBitmap(bitmap);
             }
             Log.d("tag", "using cache");
         } else {
-            switch (ramMode) {
-                case ENABLE_WITH_SPECIFIC_SERIALIZER:
-                    this.ramCacheRepository = new StringRepositoryCache(RAM_SIZE);
-                    break;
-                case ENABLE_WITH_REFERENCE:
-                    this.ramCacheRepository = new ReferenceRepositoryCache<>(RAM_SIZE, sizeOf);
-                    break;
-            }
             String taskId = UUID.randomUUID().toString();
             MessageArg messageArg = new MessageArg(taskId);
             messageArg.setJobRepositoryType(repositoryType());
             messageArg.setType(getType());
             messageArg.setUrl(url);
             bitmapDownloadHandler = new DownloadHandler<>();
-            bitmapDownloadHandler.setRepoCallback(new RepositoryCallback<Bitmap>() {
+            bitmapDownloadHandler.setRepoCallback(url, new RepositoryCallback<Bitmap>() {
+                @Override
+                public void onDownloadFinished(String urlAddress, Bitmap bitmap) {
+                    if (imageViewRepositoryCache.contains(urlAddress)) {
+                        imageViewRepositoryCache.get(urlAddress).setImageBitmap(bitmap);
+                    }
+                }
+            });
+            bitmapDownloadHandler.setCacheRepository(bitmapCacheRepository);
+            bitmapDownloadHandler.setTaskRepository();
+            bitmapDownloadHandler.setChunkRepository();
+            bitmapDownloadHandler.execute(messageArg);
+        }
+        return this;
+    }
+
+    public Repository<T> downloadBitmapIntoViewHolder(final String url, RepositoryCallbackInterface<Bitmap> viewHolder) {
+        viewHolderCacheRepository.put(url, viewHolder);
+        if (bitmapCacheRepository.snapshot().containsKey(url)) {//check cache for data availability
+            Bitmap bitmap = bitmapCacheRepository.snapshot().get(url);
+            if (bitmap != null) {
+                viewHolderCacheRepository.get(url).onDownloadFinished(url, bitmap);
+            }
+            Log.d("tag", "using cache");
+        } else {
+            String taskId = UUID.randomUUID().toString();
+            MessageArg messageArg = new MessageArg(taskId);
+            messageArg.setJobRepositoryType(repositoryType());
+            messageArg.setType(getType());
+            messageArg.setUrl(url);
+            bitmapDownloadHandler = new DownloadHandler<>();
+            bitmapDownloadHandler.setRepoCallback(url, new RepositoryCallback<Bitmap>() {
                 @Override
                 public void onDownloadFinished(String urlAddress, Bitmap bitmap) {
                     if (viewHolderCacheRepository.contains(urlAddress)) {
-                        viewHolderCacheRepository.get(urlAddress).setImageResult(bitmap);
-                        viewHolderCacheRepository.get(urlAddress).onDone();
+                        viewHolderCacheRepository.get(urlAddress).onDownloadFinished(urlAddress, bitmap);
                     }
                 }
 
                 @Override
                 public void onDownloadProgress(String urlAddress, double progress) {
                     if (viewHolderCacheRepository.contains(urlAddress)) {
-                        viewHolderCacheRepository.get(urlAddress).onProgress(progress);
+                        viewHolderCacheRepository.get(urlAddress).onDownloadProgress(urlAddress, progress);
                     }
                 }
             });

@@ -15,8 +15,10 @@ import com.metao.async.download.database.elements.Task;
 import com.metao.async.download.report.listener.DownloadManagerListener;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by metao on 2/1/2017.
@@ -33,7 +35,7 @@ public class DownloadHandler<T> {
     private static Handler mainUIHandler;
     private final Gson gson;
     private final ThreadHandler threadHandler;
-    private ArrayList<RepositoryCallback<T>> callbacks;
+    private ConcurrentHashMap<String, RepositoryCallback<T>> callbacks;
     private Repository<Task> taskRepository;
     private AsyncDownloadHandler asyncDownloadHandler;
     private Repository<Chunk> chunkRepository;
@@ -43,7 +45,7 @@ public class DownloadHandler<T> {
     DownloadHandler() {
         Log.d("tag", "starting thread...");
         mainUIHandler = new MainUIThread();
-        callbacks = new ArrayList<>();
+        callbacks = new ConcurrentHashMap<>();
         gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
         threadHandler = new ThreadHandler();
     }
@@ -53,31 +55,42 @@ public class DownloadHandler<T> {
         threadHandler.start();
     }
 
-    protected final void setRepoCallback(RepositoryCallback<T> repoCallback) {
-        callbacks.add(repoCallback);
+    protected final void setRepoCallback(String url, RepositoryCallback<T> repoCallback) {
+        callbacks.put(url, repoCallback);
     }
 
-    private void dispatchDownloadSignal(String urlAddress, Object o) {
-        for (int i = 0; i < callbacks.size(); i++) {
-            RepositoryCallback repositoryCallback = null;
-            repositoryCallback = callbacks.get(i);
-            repositoryCallback.onDownloadFinished(urlAddress, o);
+    private void dispatchDownloadSignal(String urlAddress, T o) {
+        Enumeration<String> keys = callbacks.keys();
+        while (keys.hasMoreElements()) {
+            String key = keys.nextElement();
+            final Repository.RepositoryType jobRepositoryType = messageArg.getJobRepositoryType();
+            if (jobRepositoryType.toString().equalsIgnoreCase("JSON") && !(o instanceof List)) {
+                return;
+            }
+            if (jobRepositoryType.toString().equalsIgnoreCase("BITMAP") && (o instanceof List)) {
+                return;
+            }
+            callbacks.get(key).onDownloadFinished(urlAddress, o);
         }
     }
 
     private void dispatchProgressSignal(String url, Object object) {
-        for (int i = 0; i < callbacks.size(); i++) {
-            RepositoryCallback repositoryCallback = callbacks.get(i);
+        Enumeration<String> keys = callbacks.keys();
+        while (keys.hasMoreElements()) {
+            String key = keys.nextElement();
+            RepositoryCallback<T> tRepositoryCallback = callbacks.get(key);
             if (object instanceof Double) {
-                repositoryCallback.onDownloadProgress(url, (Double) object);
+                tRepositoryCallback.onDownloadProgress(url, (Double) object);
             }
         }
     }
 
     private void dispatchErrorSignal(String url, Object object) {
-        for (int i = 0; i < callbacks.size(); i++) {
-            RepositoryCallback repositoryCallback = callbacks.get(i);
-            repositoryCallback.onError(new Throwable(url));
+        Enumeration<String> keys = callbacks.keys();
+        while (keys.hasMoreElements()) {
+            String key = keys.nextElement();
+            RepositoryCallback<T> tRepositoryCallback = callbacks.get(key);
+            tRepositoryCallback.onError(new Throwable(url));
         }
     }
 
@@ -159,27 +172,30 @@ public class DownloadHandler<T> {
                         Collection<Task> values = taskRepository.getRamCacheRepository().snapshot().values();
                         for (Task task : values) {
                             if (task.id.equalsIgnoreCase(taskId)) {
+                                Message message = new Message();
+                                Bundle bundle = new Bundle();
                                 MessageArg finalMessageArg = new MessageArg(taskId);
                                 byte[] bytes = task.data;
+                                finalMessageArg.setUrl(urlAddress);
                                 if (jobRepositoryType == Repository.RepositoryType.JSON) {
-                                    finalMessageArg.setUrl(urlAddress);
                                     String response = new String(bytes);
                                     finalMessageArg.setType(messageType);
                                     T t = gson.fromJson(response, finalMessageArg.getType());
                                     ramCacheRepository.put(urlAddress, t);
                                     finalMessageArg.setObject(t);
-                                } else {
-                                    finalMessageArg.setUrl(urlAddress);
+                                    bundle.putString("type", "onDownloadCompleted");
+                                    bundle.putSerializable("message", finalMessageArg);
+                                    message.setData(bundle);
+                                    mainUIHandler.sendMessage(message);
+                                } else if (jobRepositoryType == Repository.RepositoryType.BITMAP) {
                                     Bitmap image = BitmapConverter.getImage(bytes);
-                                    finalMessageArg.setObject(image);
                                     ramCacheRepository.put(urlAddress, (T) image);
+                                    finalMessageArg.setObject(image);
+                                    bundle.putString("type", "onDownloadCompleted");
+                                    bundle.putSerializable("message", finalMessageArg);
+                                    message.setData(bundle);
+                                    mainUIHandler.sendMessage(message);
                                 }
-                                Message message = new Message();
-                                Bundle bundle = new Bundle();
-                                bundle.putString("type", "onDownloadCompleted");
-                                bundle.putSerializable("message", finalMessageArg);
-                                message.setData(bundle);
-                                mainUIHandler.sendMessage(message);
                             }
                         }
                     }
@@ -215,7 +231,7 @@ public class DownloadHandler<T> {
             MessageArg messageArg = (MessageArg) msg.getData().getSerializable("message");
             String type = msg.getData().getString("type");
             String url = messageArg.getUrl();
-            Object object = messageArg.getObject();
+            T object = (T) messageArg.getObject();
             switch (type) {
                 case "onDownloadCompleted":
                     dispatchDownloadSignal(url, object);
