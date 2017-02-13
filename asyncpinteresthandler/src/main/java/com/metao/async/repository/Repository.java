@@ -88,6 +88,7 @@ public class Repository<T> {
             Bitmap bitmap = bitmapCacheRepository.snapshot().get(url);
             if (bitmap != null) {
                 viewHolderCacheRepository.get(url).setImageResult(bitmap);
+                viewHolderCacheRepository.get(url).onDone();
             }
             Log.d("tag", "using cache");
         } else {
