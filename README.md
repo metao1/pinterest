@@ -6,9 +6,9 @@ There are tasks in gradle task, but it is better to use IDE to run tests.
 
 `git clone https://github.com/metao1/pinterest`
 
-`gradle test`
+`./gradlew test`
 
-`gradle build`
+`./gradlew build`
 
 The project consists a demo pinterest project, simply uses AsyncPinterestHandler library, included in this project.
 The main purpose of the AsyncPinterestHandler is to load images or any file into repository. 
