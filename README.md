@@ -36,13 +36,16 @@ Repository<List<Model>> repository = new Repository<List<Model>>("ServiceRepo") 
 The AsyncPinterestHandler uses chunks (MAX number of chunks is configurable into codes- for now 4 chunks as default)
 The Chunks use for parallel downloading big files from the net.
 
-### Adding a task to download the service data into our repository
+### Adding and defining our service data into our repository
+
+#### Here a Restful service 
 ```java
-repository.addDownload(JSON_API_URL_ADDRESS
-    , new RepositoryCallback<List<Model>>() {
+repository.addSerivce(JSON_API_URL_ADDRESS
+    , new RepositoryCallback<Model>() {
     @Override
-    public void onDownloadFinished(String urlAddress, List<Model> response) {
+    public void onDownloadFinished(String urlAddress,Model response) {
         //Maybe set data to Adapters
+        // The Model can be any thing including List<Model> etc
     }
                     
     public void onError(Throwable error) {
@@ -69,21 +72,44 @@ Repository<Bitmap> repository = new Repository<Bitmap>("ImageRepo") {
         return RAM_SIZE;
     }
 };
-repository.addDownload(IMAGE_URL_ADDRESS
-    , new RepositoryCallback<Bitmap>() {
-        @Override
-        public void onDownloadFinished(String urlAddress, Bitmap imageBitmap) {
-            // Load bitmap into our ImageView
-        }
-                    
-        public void onError(Throwable error) {
-            //Raise an error message
-        }
-                    
-        public void onDownloadProgress(String urlAddress, double progress) {
-            // Showing progress for each image 
-        }
-});
+repository.downloadBitmapIntoViewHolder(IMAGE_URL_ADDRESS
+    , ImageViewHolder /* A ViewHolder*/);
+
+ ...
+
+class ImageViewHolder extends RecyclerView.ViewHolder implements RepositoryCallbackInterface<Bitmap>{
+     @Override
+       public void onDownloadFinished(String urlAddress, Bitmap bitmap) {
+           imageView.setImageBitmap(bitmap);
+           /**
+            * To tell the adapter that we done with data
+            */
+           progressBar.setVisibility(View.GONE);
+       }
+   
+       @Override
+       public void onError(Throwable throwable) {
+           this.errorUrl = errorUrl;   
+           progressBar.setVisibility(View.GONE);
+       }
+   
+       @Override
+       public void onDownloadProgress(String urlAddress, double progress) {
+           int intProgress = (int) (progress * 100.0 / (long) 100);
+           if (intProgress < 1) {
+               intProgress = intProgress + 1;
+           }
+           if (progressBar.getProgress() < intProgress) {
+               progressBar.setProgress(intProgress);
+           }
+       }
+}
+```
+
+#### Image can also download into ImageView directly
+
+```java
+    repository.downloadBitmap(IMAGE_URL_ADDRESS, imageViewObject);
 ```
 
 #### Repository Types for option:

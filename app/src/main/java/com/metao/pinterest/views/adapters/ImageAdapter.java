@@ -101,6 +101,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImagesViewHolder> {
         WebCam webCam = mImages.get(position);
         setAnimation(imagesViewHolder.imageView, position);
         repository.downloadBitmapIntoViewHolder(webCam.getThumbUrl(), imagesViewHolder);
+        repository.downloadBitmap("", new ImageView());
         if (mImages.get(position) != null) {
             if (Build.VERSION.SDK_INT >= 21) {
                 imagesViewHolder.imageView.setTransitionName("cover" + position);
