@@ -109,7 +109,7 @@ class ImageViewHolder extends RecyclerView.ViewHolder implements RepositoryCallb
 #### Image can also download into ImageView directly
 
 ```java
-    repository.downloadBitmap(IMAGE_URL_ADDRESS, imageViewObject);
+repository.downloadBitmap(IMAGE_URL_ADDRESS, imageViewObject);
 ```
 
 #### Repository Types for option:
