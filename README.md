@@ -1,5 +1,5 @@
-# pinterest
-A Pinterest Clone and fast Repository
+# AsyncPinterestHandler
+A Pinterest Clone and a fast repository of storing and downloading data
 
 Simply get the project and test or build the project.
 There are tasks in gradle task, but it is better to use IDE to run tests.
