@@ -144,36 +144,35 @@ public class ImagesFragment extends Fragment {
                 return RAM_SIZE;
             }
         };
-        repository.addService(VPS
-                , new RepositoryCallback<List<WebCam>>() {
-                    @Override
-                    public void onDownloadFinished(String urlAddress, List<WebCam> response) {
-                        mImagesProgress.setVisibility(View.GONE);
-                        mImageRecycler.setVisibility(View.VISIBLE);
-                        mImagesErrorView.setVisibility(View.GONE);
-                        webCams = new ArrayList<>(response).toArray(new WebCam[response.size()]);
-                        WebCam[] lowWebCams = Arrays.copyOfRange(webCams, 0, 5);
-                        List<WebCam> webCams = Arrays.asList(lowWebCams);
-                        mImageAdapter = new ImageAdapter(new ArrayList<>(webCams));
-                        mImageAdapter.setOnItemClickListener(recyclerRowClickListener);
-                        mImageRecycler.setAdapter(mImageAdapter);
-                    }
+        repository.addService(VPS, new RepositoryCallback<List<WebCam>>() {
+            @Override
+            public void onDownloadFinished(String urlAddress, List<WebCam> response) {
+                mImagesProgress.setVisibility(View.GONE);
+                mImageRecycler.setVisibility(View.VISIBLE);
+                mImagesErrorView.setVisibility(View.GONE);
+                webCams = new ArrayList<>(response).toArray(new WebCam[response.size()]);
+                WebCam[] lowWebCams = Arrays.copyOfRange(webCams, 0, 5);
+                List<WebCam> webCams = Arrays.asList(lowWebCams);
+                mImageAdapter = new ImageAdapter(new ArrayList<>(webCams));
+                mImageAdapter.setOnItemClickListener(recyclerRowClickListener);
+                mImageRecycler.setAdapter(mImageAdapter);
+            }
 
+            @Override
+            public void onError(Throwable error) {
+                mImagesErrorView.setErrorTitle(R.string.error_network);
+                mImagesErrorView.setErrorSubtitle(R.string.error_network_subtitle);
+                mImagesProgress.setVisibility(View.GONE);
+                mImageRecycler.setVisibility(View.GONE);
+                mImagesErrorView.setVisibility(View.VISIBLE);
+                mImagesErrorView.setOnRetryListener(new RetryListener() {
                     @Override
-                    public void onError(Throwable error) {
-                        mImagesErrorView.setErrorTitle(R.string.error_network);
-                        mImagesErrorView.setErrorSubtitle(R.string.error_network_subtitle);
-                        mImagesProgress.setVisibility(View.GONE);
-                        mImageRecycler.setVisibility(View.GONE);
-                        mImagesErrorView.setVisibility(View.VISIBLE);
-                        mImagesErrorView.setOnRetryListener(new RetryListener() {
-                            @Override
-                            public void onRetry() {
-                                showAll();
-                            }
-                        });
+                    public void onRetry() {
+                        showAll();
                     }
                 });
+            }
+        });
     }
 
     private void updateAdapter(WebCam[] images) {

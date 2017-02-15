@@ -17,7 +17,6 @@ import com.metao.async.download.report.listener.DownloadManagerListener;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -64,10 +63,10 @@ public class DownloadHandler<T> {
         while (keys.hasMoreElements()) {
             String key = keys.nextElement();
             final Repository.RepositoryType jobRepositoryType = messageArg.getJobRepositoryType();
-            if (jobRepositoryType.toString().equalsIgnoreCase("JSON") && !(o instanceof List)) {
+            if (jobRepositoryType.toString().equalsIgnoreCase("JSON") && (o instanceof Bitmap)) {
                 return;
             }
-            if (jobRepositoryType.toString().equalsIgnoreCase("BITMAP") && (o instanceof List)) {
+            if (jobRepositoryType.toString().equalsIgnoreCase("BITMAP") && !(o instanceof Bitmap)) {
                 return;
             }
             callbacks.get(key).onDownloadFinished(urlAddress, o);
@@ -115,7 +114,7 @@ public class DownloadHandler<T> {
         @Override
         public void run() {
             try {
-                Log.d("tag", "threading...");
+                Log.d("tag", "threading..." + messageArg.getUrl());
                 this.setName(ThreadHandler.class.getName());
                 this.setPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
                 final Repository.RepositoryType jobRepositoryType = messageArg.getJobRepositoryType();
