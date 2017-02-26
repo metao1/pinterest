@@ -131,7 +131,7 @@ public class ImagesFragment extends Fragment {
     }
 
     private void fetchImages() {
-        final Repository<List<WebCam>> repository = new Repository<List<WebCam>>("ImageRepo") {
+        final Repository<ArrayList<WebCam>> repository = new Repository<ArrayList<WebCam>>("ImageRepo") {
             static final int RAM_SIZE = 4 * 1024 * 1024;//4MiB
 
             @Override
@@ -144,9 +144,9 @@ public class ImagesFragment extends Fragment {
                 return RAM_SIZE;
             }
         };
-        repository.addService(VPS, new RepositoryCallback<List<WebCam>>() {
+        repository.addService(VPS, new RepositoryCallback<ArrayList<WebCam>>() {
             @Override
-            public void onDownloadFinished(String urlAddress, List<WebCam> response) {
+            public void onDownloadFinished(String urlAddress, ArrayList<WebCam> response) {
                 mImagesProgress.setVisibility(View.GONE);
                 mImageRecycler.setVisibility(View.VISIBLE);
                 mImagesErrorView.setVisibility(View.GONE);

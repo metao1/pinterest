@@ -60,18 +60,19 @@ public class DownloadHandler<T> {
         callbacks.put(url, repoCallback);
     }
 
-    private void dispatchDownloadSignal(String urlAddress, T o, String type) {
-        if (!type.contains(o.getClass().getSimpleName())) {
-            return;
-        }
+    private void dispatchDownloadSignal(String urlAddress, T o) {
         Enumeration<String> keys = callbacks.keys();
         while (keys.hasMoreElements()) {
             String key = keys.nextElement();
-            callbacks.get(key).onDownloadFinished(urlAddress, o);
+            try {
+                callbacks.get(key).onDownloadFinished(urlAddress, o);
+            } catch (Exception e) {
+
+            }
         }
     }
 
-    private void dispatchProgressSignal(String url, T t, Object object) {
+    private void dispatchProgressSignal(String url, Object object) {
         Enumeration<String> keys = callbacks.keys();
         while (keys.hasMoreElements()) {
             String key = keys.nextElement();
@@ -82,10 +83,7 @@ public class DownloadHandler<T> {
         }
     }
 
-    private void dispatchErrorSignal(String url, T object, String type) {
-        if (!type.contains(object.getClass().getSimpleName())) {
-            return;
-        }
+    private void dispatchErrorSignal(String url, T object) {
         Enumeration<String> keys = callbacks.keys();
         while (keys.hasMoreElements()) {
             String key = keys.nextElement();
@@ -187,7 +185,6 @@ public class DownloadHandler<T> {
                                     ramCacheRepository.put(urlAddress, t);
                                     finalMessageArg.setObject(t);
                                     bundle.putString("resultType", "onDownloadCompleted");
-                                    bundle.putString("dataType", String.valueOf(finalMessageArg.getType()));
                                     bundle.putSerializable("message", finalMessageArg);
                                     message.setData(bundle);
                                     mainUIHandler.sendMessage(message);
@@ -196,7 +193,6 @@ public class DownloadHandler<T> {
                                     ramCacheRepository.put(urlAddress, (T) image);
                                     finalMessageArg.setObject(image);
                                     bundle.putString("resultType", "onDownloadCompleted");
-                                    bundle.putString("dataType", String.valueOf(finalMessageArg.getType()));
                                     bundle.putSerializable("message", finalMessageArg);
                                     message.setData(bundle);
                                     mainUIHandler.sendMessage(message);
@@ -212,7 +208,6 @@ public class DownloadHandler<T> {
                         Message message = new Message();
                         Bundle bundle = new Bundle();
                         bundle.putString("resultType", "onError");
-                        bundle.putString("dataType", String.valueOf(finalMessageArg.getType()));
                         bundle.putSerializable("message", finalMessageArg);
                         message.setData(bundle);
                         mainUIHandler.sendMessage(message);
@@ -235,19 +230,18 @@ public class DownloadHandler<T> {
         @Override
         public void handleMessage(Message msg) {
             MessageArg messageArg = (MessageArg) msg.getData().getSerializable("message");
-            String typeString = msg.getData().getString("dataType");
             String resultType = msg.getData().getString("resultType");
             String url = messageArg.getUrl();
             T object = (T) messageArg.getObject();
             switch (resultType) {
                 case "onDownloadCompleted":
-                    dispatchDownloadSignal(url, object, typeString);
+                    dispatchDownloadSignal(url, object);
                     break;
                 case "onDownloadProgress":
-                    dispatchProgressSignal(url, object, typeString);
+                    dispatchProgressSignal(url, object);
                     break;
                 case "onError":
-                    dispatchErrorSignal(url, object, typeString);
+                    dispatchErrorSignal(url, object);
                     break;
             }
         }
