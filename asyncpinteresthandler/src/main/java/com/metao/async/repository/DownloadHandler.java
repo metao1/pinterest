@@ -8,12 +8,14 @@ import android.os.Message;
 import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.stream.JsonReader;
 import com.metao.async.download.core.AsyncDownloadHandler;
 import com.metao.async.download.core.enums.QueueSort;
 import com.metao.async.download.database.elements.Chunk;
 import com.metao.async.download.database.elements.Task;
 import com.metao.async.download.report.listener.DownloadManagerListener;
 
+import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -58,22 +60,18 @@ public class DownloadHandler<T> {
         callbacks.put(url, repoCallback);
     }
 
-    private void dispatchDownloadSignal(String urlAddress, T o) {
+    private void dispatchDownloadSignal(String urlAddress, T o, String type) {
+        if (!type.contains(o.getClass().getSimpleName())) {
+            return;
+        }
         Enumeration<String> keys = callbacks.keys();
         while (keys.hasMoreElements()) {
             String key = keys.nextElement();
-            final Repository.RepositoryType jobRepositoryType = messageArg.getJobRepositoryType();
-            if (jobRepositoryType.toString().equalsIgnoreCase("JSON") && (o instanceof Bitmap)) {
-                return;
-            }
-            if (jobRepositoryType.toString().equalsIgnoreCase("BITMAP") && !(o instanceof Bitmap)) {
-                return;
-            }
             callbacks.get(key).onDownloadFinished(urlAddress, o);
         }
     }
 
-    private void dispatchProgressSignal(String url, Object object) {
+    private void dispatchProgressSignal(String url, T t, Object object) {
         Enumeration<String> keys = callbacks.keys();
         while (keys.hasMoreElements()) {
             String key = keys.nextElement();
@@ -84,7 +82,10 @@ public class DownloadHandler<T> {
         }
     }
 
-    private void dispatchErrorSignal(String url, Object object) {
+    private void dispatchErrorSignal(String url, T object, String type) {
+        if (!type.contains(object.getClass().getSimpleName())) {
+            return;
+        }
         Enumeration<String> keys = callbacks.keys();
         while (keys.hasMoreElements()) {
             String key = keys.nextElement();
@@ -114,7 +115,7 @@ public class DownloadHandler<T> {
         @Override
         public void run() {
             try {
-                Log.d("tag", "threading..." + messageArg.getUrl());
+                Log.d("tag", "threading...");
                 this.setName(ThreadHandler.class.getName());
                 this.setPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
                 final Repository.RepositoryType jobRepositoryType = messageArg.getJobRepositoryType();
@@ -143,9 +144,10 @@ public class DownloadHandler<T> {
                         finalMessageArg.setUrl(urlAddress);
                         Message message = new Message();
                         Bundle bundle = new Bundle();
-                        bundle.putString("type", "onDownloadProgress");
+                        bundle.putString("resultType", "onDownloadProgress");
                         finalMessageArg.setObject(percent);
                         finalMessageArg.setType(messageType);
+                        bundle.putString("dataType", String.valueOf(finalMessageArg.getType()));
                         bundle.putSerializable("message", finalMessageArg);
                         message.setData(bundle);
                         mainUIHandler.sendMessage(message);
@@ -177,12 +179,15 @@ public class DownloadHandler<T> {
                                 byte[] bytes = task.data;
                                 finalMessageArg.setUrl(urlAddress);
                                 if (jobRepositoryType == Repository.RepositoryType.JSON) {
-                                    String response = new String(bytes);
+                                    String response = new String(bytes).trim();
                                     finalMessageArg.setType(messageType);
-                                    T t = gson.fromJson(response, finalMessageArg.getType());
+                                    JsonReader reader = new JsonReader(new StringReader(response));
+                                    reader.setLenient(true);
+                                    T t = gson.fromJson(reader, finalMessageArg.getType());
                                     ramCacheRepository.put(urlAddress, t);
                                     finalMessageArg.setObject(t);
-                                    bundle.putString("type", "onDownloadCompleted");
+                                    bundle.putString("resultType", "onDownloadCompleted");
+                                    bundle.putString("dataType", String.valueOf(finalMessageArg.getType()));
                                     bundle.putSerializable("message", finalMessageArg);
                                     message.setData(bundle);
                                     mainUIHandler.sendMessage(message);
@@ -190,7 +195,8 @@ public class DownloadHandler<T> {
                                     Bitmap image = BitmapConverter.getImage(bytes);
                                     ramCacheRepository.put(urlAddress, (T) image);
                                     finalMessageArg.setObject(image);
-                                    bundle.putString("type", "onDownloadCompleted");
+                                    bundle.putString("resultType", "onDownloadCompleted");
+                                    bundle.putString("dataType", String.valueOf(finalMessageArg.getType()));
                                     bundle.putSerializable("message", finalMessageArg);
                                     message.setData(bundle);
                                     mainUIHandler.sendMessage(message);
@@ -205,7 +211,8 @@ public class DownloadHandler<T> {
                         finalMessageArg.setUrl(urlAddress);
                         Message message = new Message();
                         Bundle bundle = new Bundle();
-                        bundle.putString("type", "onError");
+                        bundle.putString("resultType", "onError");
+                        bundle.putString("dataType", String.valueOf(finalMessageArg.getType()));
                         bundle.putSerializable("message", finalMessageArg);
                         message.setData(bundle);
                         mainUIHandler.sendMessage(message);
@@ -228,18 +235,19 @@ public class DownloadHandler<T> {
         @Override
         public void handleMessage(Message msg) {
             MessageArg messageArg = (MessageArg) msg.getData().getSerializable("message");
-            String type = msg.getData().getString("type");
+            String typeString = msg.getData().getString("dataType");
+            String resultType = msg.getData().getString("resultType");
             String url = messageArg.getUrl();
             T object = (T) messageArg.getObject();
-            switch (type) {
+            switch (resultType) {
                 case "onDownloadCompleted":
-                    dispatchDownloadSignal(url, object);
+                    dispatchDownloadSignal(url, object, typeString);
                     break;
                 case "onDownloadProgress":
-                    dispatchProgressSignal(url, object);
+                    dispatchProgressSignal(url, object, typeString);
                     break;
                 case "onError":
-                    dispatchErrorSignal(url, object);
+                    dispatchErrorSignal(url, object, typeString);
                     break;
             }
         }
