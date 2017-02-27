@@ -2,7 +2,6 @@ package com.metao.async.download.core.mainWorker;
 
 import android.util.Log;
 import android.webkit.MimeTypeMap;
-import com.metao.async.repository.Repository;
 import com.metao.async.download.appConstants.DispatchEcode;
 import com.metao.async.download.appConstants.DispatchElevel;
 import com.metao.async.download.core.chunkWorker.Builder;
@@ -13,6 +12,7 @@ import com.metao.async.download.database.TasksDataSource;
 import com.metao.async.download.database.elements.Chunk;
 import com.metao.async.download.database.elements.Task;
 import com.metao.async.download.report.listener.DownloadManagerListenerModerator;
+import com.metao.async.repository.Repository;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -103,7 +103,7 @@ public class AsyncStartDownload extends Thread {
             e.printStackTrace();
 //            MyExtension.AS3_CONTEXT.dispatchStatusEventAsync(
 //					DispatchEcode.EXCEPTION, DispatchElevel.URL_INVALID);
-            Log.d(DispatchEcode.EXCEPTION, DispatchElevel.URL_INVALID);
+            Log.d(DispatchEcode.EXCEPTION, DispatchElevel.URL_INVALID + ":>" + task.url);
             return false;
 
         } catch (IOException e) {

@@ -189,13 +189,17 @@ public class DownloadHandler<T> {
                                     message.setData(bundle);
                                     mainUIHandler.sendMessage(message);
                                 } else if (jobRepositoryType == Repository.RepositoryType.BITMAP) {
-                                    Bitmap image = BitmapConverter.getImage(bytes);
-                                    ramCacheRepository.put(urlAddress, (T) image);
-                                    finalMessageArg.setObject(image);
-                                    bundle.putString("resultType", "onDownloadCompleted");
-                                    bundle.putSerializable("message", finalMessageArg);
-                                    message.setData(bundle);
-                                    mainUIHandler.sendMessage(message);
+                                    if (bytes != null && bytes.length > 0) {
+                                        Bitmap image = BitmapConverter.getImage(bytes);
+                                        if (image != null) {
+                                            ramCacheRepository.put(urlAddress, (T) image);
+                                            finalMessageArg.setObject(image);
+                                            bundle.putString("resultType", "onDownloadCompleted");
+                                            bundle.putSerializable("message", finalMessageArg);
+                                            message.setData(bundle);
+                                            mainUIHandler.sendMessage(message);
+                                        }
+                                    }
                                 }
                             }
                         }
