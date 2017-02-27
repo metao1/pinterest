@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -200,11 +201,11 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements RepositoryCall
 
     @Override
     public void onDownloadProgress(String urlAddress, double progress) {
-        int intProgress = (int) (progress * 100.0 / (long) 100);
+        int intProgress = (int) (progress);
         if (intProgress < 1) {
             intProgress = intProgress + 1;
         }
-        if (mFabProgress.getProgress() < intProgress) {
+        if (mFabProgress.getProgress() < progress) {
             mFabProgress.setProgress(intProgress);
         }
     }
