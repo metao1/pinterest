@@ -1,6 +1,7 @@
 package com.metao.async.repository;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -190,14 +191,22 @@ public class DownloadHandler<T> {
                                     mainUIHandler.sendMessage(message);
                                 } else if (jobRepositoryType == Repository.RepositoryType.BITMAP) {
                                     if (bytes != null && bytes.length > 0) {
-                                        Bitmap image = BitmapConverter.getImage(bytes);
-                                        if (image != null) {
-                                            ramCacheRepository.put(urlAddress, (T) image);
-                                            finalMessageArg.setObject(image);
-                                            bundle.putString("resultType", "onDownloadCompleted");
-                                            bundle.putSerializable("message", finalMessageArg);
-                                            message.setData(bundle);
-                                            mainUIHandler.sendMessage(message);
+                                        /*Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);*/
+                                        BitmapFactory.Options options = new BitmapFactory.Options();
+                                        options.inMutable = true;
+                                        Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+                                        try {
+                                            Log.d("image repo", bytes.length + ":" + String.valueOf(image) + ":" + urlAddress);
+                                            if (image != null) {
+                                                ramCacheRepository.put(urlAddress, (T) image);
+                                                finalMessageArg.setObject(image);
+                                                bundle.putString("resultType", "onDownloadCompleted");
+                                                bundle.putSerializable("message", finalMessageArg);
+                                                message.setData(bundle);
+                                                mainUIHandler.sendMessage(message);
+                                            }
+                                        } catch (Exception e) {
+
                                         }
                                     }
                                 }

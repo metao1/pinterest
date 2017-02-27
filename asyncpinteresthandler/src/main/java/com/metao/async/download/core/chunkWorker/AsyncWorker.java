@@ -1,12 +1,12 @@
 package com.metao.async.download.core.chunkWorker;
 
-import android.util.Log;
 import com.metao.async.download.database.elements.Chunk;
 import com.metao.async.download.database.elements.Task;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -31,6 +31,7 @@ public class AsyncWorker extends Thread {
     @Override
     public void run() {
         try {
+            int count;
             URL url = new URL(task.url);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             // Avoid timeout exception which usually occurs in low network
@@ -40,27 +41,24 @@ public class AsyncWorker extends Thread {
                 connection.setRequestProperty("Range", "bytes=" + chunk.begin + "-" + chunk.end);
             }
             connection.connect();
-            // Check response code first to avoid error stream
-            int status = connection.getResponseCode();
-            BufferedInputStream remoteFileIn;
-            if (status == 416) {
-                remoteFileIn = new BufferedInputStream(connection.getErrorStream());
-            } else {
-                remoteFileIn = new BufferedInputStream(connection.getInputStream());
-            }
-            int len = 0;
-            // set watchDoger to stop thread after 1sec if no connection lost
+            int lengthOfFile = connection.getContentLength();
+            InputStream input = new BufferedInputStream(url.openStream(), 8192);
             watchDog = new ConnectionWatchDog(5000, this);
-            watchDog.start();
+            byte data[] = new byte[BUFFER_SIZE];
+
+            long total = 0;
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            byte[] data = new byte[BUFFER_SIZE];
-            while (!this.isInterrupted() &&
-                    (len = remoteFileIn.read(data)) > 0) {
+            while ((count = input.read(data)) != -1) {
+                total += count;
+                process((int) ((total * 100) / lengthOfFile));
+                buffer.write(data, 0, count);
                 watchDog.reset();
-                buffer.write(data, 0, len);
-                process(len);
             }
+
             buffer.flush();
+            buffer.close();
+            input.close();
+
             if (data.length > 0) {
                 chunk.data = buffer.toByteArray();
             }
