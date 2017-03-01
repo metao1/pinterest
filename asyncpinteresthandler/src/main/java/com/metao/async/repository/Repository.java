@@ -8,7 +8,6 @@ import com.metao.async.download.database.elements.Chunk;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.UUID;
 
 /**
  * Created by metao on 2/1/2017.
@@ -70,13 +69,13 @@ public class Repository<T> {
                     this.ramCacheRepository = new ReferenceRepositoryCache<>(RAM_SIZE, sizeOf);
                     break;
             }
-            String taskId = UUID.randomUUID().toString();
+            String taskId = Helper.createNewId();
             MessageArg messageArg = new MessageArg(taskId);
             messageArg.setJobRepositoryType(repositoryType());
             messageArg.setType(getType());
             messageArg.setUrl(url);
             serviceDownloadHandler = new DownloadHandler<>();
-            serviceDownloadHandler.setRepoCallback(url, repositoryCallback);
+            serviceDownloadHandler.setRepoCallback(taskId, repositoryCallback);
             serviceDownloadHandler.setCacheRepository(serviceCacheRepository);
             serviceDownloadHandler.setTaskRepository();
             serviceDownloadHandler.setChunkRepository();
@@ -85,26 +84,27 @@ public class Repository<T> {
         return this;
     }
 
-    public Repository<T> downloadBitmap(final String url, ImageView imageView) {
-        imageViewRepositoryCache.put(url, imageView);
+    public Repository<T> downloadBitmapIntoImageView(final String url, ImageView imageView) {
         if (bitmapCacheRepository.snapshot().containsKey(url)) {//check cache for data availability
+            Log.d("tag", "using cache");
             Bitmap bitmap = bitmapCacheRepository.snapshot().get(url);
             if (bitmap != null) {
-                imageViewRepositoryCache.get(url).setImageBitmap(bitmap);
+                imageView.setImageBitmap(bitmap);
             }
-            Log.d("tag", "using cache");
         } else {
-            String taskId = UUID.randomUUID().toString();
+            String taskId = Helper.createNewId();
             MessageArg messageArg = new MessageArg(taskId);
             messageArg.setJobRepositoryType(repositoryType());
             messageArg.setType(getType());
             messageArg.setUrl(url);
+            imageViewRepositoryCache.put(taskId, imageView);
             bitmapDownloadHandler = new DownloadHandler<>();
-            bitmapDownloadHandler.setRepoCallback(url, new RepositoryCallback<Bitmap>() {
+            bitmapDownloadHandler.setRepoCallback(taskId, new RepositoryCallback<Bitmap>() {
                 @Override
-                public void onDownloadFinished(String urlAddress, Bitmap bitmap) {
-                    if (imageViewRepositoryCache.contains(urlAddress)) {
-                        imageViewRepositoryCache.get(urlAddress).setImageBitmap(bitmap);
+                public void onDownloadFinished(String taskId, Bitmap bitmap) {
+                    if (imageViewRepositoryCache.contains(taskId)) {
+                        imageViewRepositoryCache.get(taskId).setImageBitmap(bitmap);
+                        bitmapCacheRepository.put(url, bitmap);
                     }
                 }
             });
@@ -117,32 +117,32 @@ public class Repository<T> {
     }
 
     public Repository<T> downloadBitmapIntoViewHolder(final String url, RepositoryCallbackInterface<Bitmap> viewHolder) {
-        viewHolderCacheRepository.put(url, viewHolder);
         if (bitmapCacheRepository.snapshot().containsKey(url)) {//check cache for data availability
             Bitmap bitmap = bitmapCacheRepository.snapshot().get(url);
             if (bitmap != null) {
-                viewHolderCacheRepository.get(url).onDownloadFinished(url, bitmap);
+                viewHolder.onDownloadFinished(url, bitmap);
             }
             Log.d("tag", "using cache");
         } else {
-            String taskId = UUID.randomUUID().toString();
+            String taskId = Helper.createNewId();
             MessageArg messageArg = new MessageArg(taskId);
             messageArg.setJobRepositoryType(repositoryType());
             messageArg.setType(getType());
             messageArg.setUrl(url);
+            viewHolderCacheRepository.put(taskId, viewHolder);
             bitmapDownloadHandler = new DownloadHandler<>();
-            bitmapDownloadHandler.setRepoCallback(url, new RepositoryCallback<Bitmap>() {
+            bitmapDownloadHandler.setRepoCallback(taskId, new RepositoryCallback<Bitmap>() {
                 @Override
-                public void onDownloadFinished(String urlAddress, Bitmap bitmap) {
-                    if (viewHolderCacheRepository.contains(urlAddress)) {
-                        viewHolderCacheRepository.get(urlAddress).onDownloadFinished(urlAddress, bitmap);
+                public void onDownloadFinished(String taskId, Bitmap bitmap) {
+                    if (viewHolderCacheRepository.contains(taskId)) {
+                        viewHolderCacheRepository.get(taskId).onDownloadFinished(taskId, bitmap);
                     }
                 }
 
                 @Override
-                public void onDownloadProgress(String urlAddress, double progress) {
-                    if (viewHolderCacheRepository.contains(urlAddress)) {
-                        viewHolderCacheRepository.get(urlAddress).onDownloadProgress(urlAddress, progress);
+                public void onDownloadProgress(String taskId, double progress) {
+                    if (viewHolderCacheRepository.contains(taskId)) {
+                        viewHolderCacheRepository.get(taskId).onDownloadProgress(taskId, progress);
                     }
                 }
             });
@@ -186,7 +186,7 @@ public class Repository<T> {
             ramSerialized = ramSerializer.toString(object);
             ramCacheRepository.put(key, ramSerialized);
         }
-        return Helper.createNewId();
+        return key;
     }
 
     public T get(String key) {

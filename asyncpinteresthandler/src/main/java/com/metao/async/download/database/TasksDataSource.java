@@ -1,10 +1,11 @@
 package com.metao.async.download.database;
 
-import com.metao.async.repository.Repository;
-import com.metao.async.repository.RepositoryCache;
+import android.util.Log;
 import com.metao.async.download.core.enums.QueueSort;
 import com.metao.async.download.core.enums.TaskStates;
 import com.metao.async.download.database.elements.Task;
+import com.metao.async.repository.Repository;
+import com.metao.async.repository.RepositoryCache;
 
 import java.util.*;
 
@@ -97,12 +98,12 @@ public class TasksDataSource {
         return (Task) taskRepository.getRamCacheRepository().get(id);
     }
 
-    public Task getTaskInfoWithName(String name) {
+    public Task getTaskInfoWithName(String id) {
         RepositoryCache ramCacheRepository = taskRepository.getRamCacheRepository();
         Iterator<Task> taskIterator = ramCacheRepository.snapshot().values().iterator();
         while (taskIterator.hasNext()) {
             Task task = taskIterator.next();
-            if (task.name.equalsIgnoreCase(name)) {
+            if (task.id.equalsIgnoreCase(id)) {
                 return task;
             }
         }
@@ -123,13 +124,13 @@ public class TasksDataSource {
     }
 
 
-    public boolean containsTask(String name) {
+    public boolean containsTask(String id) {
         boolean result = false;
         RepositoryCache ramCacheRepository = taskRepository.getRamCacheRepository();
         Iterator taskEntryIterator = ramCacheRepository.snapshot().entrySet().iterator();
         while (taskEntryIterator.hasNext()) {
             Task task = (Task) taskEntryIterator.next();
-            if (task.name.equalsIgnoreCase(name)) {
+            if (task.id.equalsIgnoreCase(id)) {
                 result = true;
                 break;
             }

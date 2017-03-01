@@ -37,7 +37,6 @@ public class ReportStructure {
 
     public ReportStructure setObjectValues(Task task, List<Chunk> taskChunks) {
         this.id = task.id;
-        this.name = task.name;
         this.state = task.state;
         this.resumable = task.resumable;
         this.url = task.url;
@@ -45,8 +44,6 @@ public class ReportStructure {
         this.type = task.extension;
         this.chunks = task.chunks;
         this.priority = task.priority;
-        this.saveAddress = task.id + "/" + task.name + "." + task.extension;
-
         this.percent = calculatePercent(task, taskChunks);
 
         return this;

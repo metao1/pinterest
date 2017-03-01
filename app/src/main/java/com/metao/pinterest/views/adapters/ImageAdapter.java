@@ -166,7 +166,7 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements RepositoryCall
         mFabProgress.setMax(100);
         mFabProgress.setScaleX(1);
         mFabProgress.setScaleY(1);
-        mFabProgress.setProgress(40);
+        mFabProgress.setProgress(10);
     }
 
     @Override
@@ -183,7 +183,7 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements RepositoryCall
     }
 
     @Override
-    public void onDownloadFinished(String urlAddress, Bitmap bitmap) {
+    public void onDownloadFinished(String taskId, Bitmap bitmap) {
         imageView.setImageBitmap(bitmap);
         /**
          * To tell the adapter that we done with data
@@ -200,7 +200,7 @@ class ImagesViewHolder extends RecyclerView.ViewHolder implements RepositoryCall
     }
 
     @Override
-    public void onDownloadProgress(String urlAddress, double progress) {
+    public void onDownloadProgress(String taskId, double progress) {
         int intProgress = (int) (progress);
         if (intProgress < 1) {
             intProgress = intProgress + 1;

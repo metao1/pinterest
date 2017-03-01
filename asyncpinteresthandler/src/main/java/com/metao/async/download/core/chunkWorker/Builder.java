@@ -1,5 +1,6 @@
 package com.metao.async.download.core.chunkWorker;
 
+import android.util.Log;
 import com.metao.async.download.database.elements.Chunk;
 import com.metao.async.download.database.elements.Task;
 import com.metao.async.download.report.listener.DownloadManagerListener;

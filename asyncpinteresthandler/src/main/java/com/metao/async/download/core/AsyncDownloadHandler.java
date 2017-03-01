@@ -1,7 +1,6 @@
 package com.metao.async.download.core;
 
 import android.util.Log;
-import com.metao.async.repository.Repository;
 import com.metao.async.download.core.chunkWorker.Moderator;
 import com.metao.async.download.core.enums.QueueSort;
 import com.metao.async.download.core.enums.TaskStates;
@@ -16,6 +15,7 @@ import com.metao.async.download.report.exceptions.QueueDownloadInProgressExcepti
 import com.metao.async.download.report.exceptions.QueueDownloadNotStartedException;
 import com.metao.async.download.report.listener.DownloadManagerListener;
 import com.metao.async.download.report.listener.DownloadManagerListenerModerator;
+import com.metao.async.repository.Repository;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -69,7 +69,6 @@ public class AsyncDownloadHandler {
      * </p>
      *
      * @param repositoryName Repository  address
-     * @param saveName       file name
      * @param url            url file address
      * @param chunk          number of chunks
      * @param overwrite      if exist an other file with same name
@@ -77,22 +76,20 @@ public class AsyncDownloadHandler {
      *                       "false" find new name and save it with new name     @return id
      *                       inserted task id
      */
-    public String addTask(String repositoryName, String saveName, String url, int chunk,
+    public String addTask(String taskId, String repositoryName, String url, int chunk,
                           boolean overwrite,
                           boolean priority) {
-        if (!overwrite) {
-            saveName = getUniqueName(saveName);
-        } else {
-            deleteSameDownloadNameTask(saveName);
+        if (overwrite) {
+            deleteSameDownloadNameTask(url);
         }
         Log.d("--------", "overwrite " + url);
         chunk = setMaxChunk(chunk);
         Log.d("--------", "ma chunk " + chunk);
-        return insertNewTask(repositoryName, saveName, url, chunk, priority);
+        return insertNewTask(taskId, repositoryName, url, chunk, priority);
     }
 
-    public String addTask(String repositoryName, String saveName, String url, boolean overwrite, boolean priority) {
-        return this.addTask(repositoryName, saveName, url, maximumUserChunks, overwrite, priority);
+    public String addTask(String taskId, String repositoryName, String url, boolean overwrite, boolean priority) {
+        return this.addTask(taskId, repositoryName, url, maximumUserChunks, overwrite, priority);
     }
 
     /**
@@ -259,8 +256,8 @@ public class AsyncDownloadHandler {
         return tasksDataSource.getUnCompletedTasks(QueueSort.oldestFirst);
     }
 
-    private String insertNewTask(String repositoryName, String taskName, String url, int chunk, boolean priority) {
-        Task task = new Task(0, taskName, url, TaskStates.INIT, chunk, repositoryName, priority);
+    private String insertNewTask(String taskId, String repositoryName, String url, int chunk, boolean priority) {
+        Task task = new Task(taskId, 0, url, TaskStates.INIT, chunk, repositoryName, priority);
         task.id = tasksDataSource.insertTask(task);
         return task.id;
     }

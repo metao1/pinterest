@@ -61,35 +61,35 @@ public class DownloadHandler<T> {
         callbacks.put(url, repoCallback);
     }
 
-    private void dispatchDownloadSignal(String urlAddress, T o) {
+    private void dispatchDownloadSignal(String taskId, T o) {
         Enumeration<String> keys = callbacks.keys();
         while (keys.hasMoreElements()) {
             String key = keys.nextElement();
             try {
-                callbacks.get(key).onDownloadFinished(urlAddress, o);
+                callbacks.get(key).onDownloadFinished(taskId, o);
             } catch (Exception e) {
 
             }
         }
     }
 
-    private void dispatchProgressSignal(String url, Object object) {
+    private void dispatchProgressSignal(String taskId, Object object) {
         Enumeration<String> keys = callbacks.keys();
         while (keys.hasMoreElements()) {
             String key = keys.nextElement();
             RepositoryCallback<T> tRepositoryCallback = callbacks.get(key);
             if (object instanceof Double) {
-                tRepositoryCallback.onDownloadProgress(url, (Double) object);
+                tRepositoryCallback.onDownloadProgress(taskId, (Double) object);
             }
         }
     }
 
-    private void dispatchErrorSignal(String url, T object) {
+    private void dispatchErrorSignal(String taskId, T object) {
         Enumeration<String> keys = callbacks.keys();
         while (keys.hasMoreElements()) {
             String key = keys.nextElement();
             RepositoryCallback<T> tRepositoryCallback = callbacks.get(key);
-            tRepositoryCallback.onError(new Throwable(url));
+            tRepositoryCallback.onError(new Throwable(taskId));
         }
     }
 
@@ -146,6 +146,7 @@ public class DownloadHandler<T> {
                         bundle.putString("resultType", "onDownloadProgress");
                         finalMessageArg.setObject(percent);
                         finalMessageArg.setType(messageType);
+                        bundle.putString("taskId", taskId);
                         bundle.putString("dataType", String.valueOf(finalMessageArg.getType()));
                         bundle.putSerializable("message", finalMessageArg);
                         message.setData(bundle);
@@ -183,8 +184,9 @@ public class DownloadHandler<T> {
                                     JsonReader reader = new JsonReader(new StringReader(response));
                                     reader.setLenient(true);
                                     T t = gson.fromJson(reader, finalMessageArg.getType());
-                                    ramCacheRepository.put(urlAddress, t);
+                                    ramCacheRepository.put(taskId, t);
                                     finalMessageArg.setObject(t);
+                                    bundle.putString("taskId", taskId);
                                     bundle.putString("resultType", "onDownloadCompleted");
                                     bundle.putSerializable("message", finalMessageArg);
                                     message.setData(bundle);
@@ -198,8 +200,9 @@ public class DownloadHandler<T> {
                                         try {
                                             Log.d("image repo", bytes.length + ":" + String.valueOf(image) + ":" + urlAddress);
                                             if (image != null) {
-                                                ramCacheRepository.put(urlAddress, (T) image);
+                                                ramCacheRepository.put(taskId, (T) image);
                                                 finalMessageArg.setObject(image);
+                                                bundle.putString("taskId", taskId);
                                                 bundle.putString("resultType", "onDownloadCompleted");
                                                 bundle.putSerializable("message", finalMessageArg);
                                                 message.setData(bundle);
@@ -220,13 +223,14 @@ public class DownloadHandler<T> {
                         finalMessageArg.setUrl(urlAddress);
                         Message message = new Message();
                         Bundle bundle = new Bundle();
+                        bundle.putString("taskId", taskId);
                         bundle.putString("resultType", "onError");
                         bundle.putSerializable("message", finalMessageArg);
                         message.setData(bundle);
                         mainUIHandler.sendMessage(message);
                     }
                 });
-                asyncDownloadHandler.addTask(REPOSITORY_NAME, urlAddress, urlAddress, MAX_CHUNKS, OVERWRITE, PRIORITY);
+                asyncDownloadHandler.addTask(messageArg.getId(), REPOSITORY_NAME, urlAddress, MAX_CHUNKS, OVERWRITE, PRIORITY);
                 asyncDownloadHandler.startQueueDownload(DOWNLOAD_TASKS_PER_TIME, SORT_TYPE);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -244,17 +248,18 @@ public class DownloadHandler<T> {
         public void handleMessage(Message msg) {
             MessageArg messageArg = (MessageArg) msg.getData().getSerializable("message");
             String resultType = msg.getData().getString("resultType");
+            String taskId = msg.getData().getString("taskId");
             String url = messageArg.getUrl();
             T object = (T) messageArg.getObject();
             switch (resultType) {
                 case "onDownloadCompleted":
-                    dispatchDownloadSignal(url, object);
+                    dispatchDownloadSignal(taskId, object);
                     break;
                 case "onDownloadProgress":
-                    dispatchProgressSignal(url, object);
+                    dispatchProgressSignal(taskId, object);
                     break;
                 case "onError":
-                    dispatchErrorSignal(url, object);
+                    dispatchErrorSignal(taskId, object);
                     break;
             }
         }

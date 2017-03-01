@@ -1,11 +1,8 @@
 package com.metao.async.download.database.elements;
 
-import com.metao.async.download.appConstants.Helper;
-
 public class Task {
 
     public String id;
-    public String name;
     public long size;
     public int state;
     public String url;
@@ -18,25 +15,10 @@ public class Task {
     public byte[] data;
     public boolean priority;
 
-    public Task() {
-        this.id = Helper.createNewId();
-        this.name = null;
-        this.size = 0;
-        this.state = 0;
-        this.url = null;
-        this.percent = 0l;
-        this.chunks = 0;
-        this.notify = true;
-        this.resumable = true;
-        this.repositoryId = null;
-        this.extension = null;
-        this.priority = false;  // low priority
-    }
 
-    public Task(long size, String name, String url,
+    public Task(String id, long size, String url,
                 int state, int chunks, String repositoryId, boolean priority) {
-        this.id = Helper.createNewId();
-        this.name = name;
+        this.id = id;
         this.size = size;
         this.state = state;
         this.url = url;

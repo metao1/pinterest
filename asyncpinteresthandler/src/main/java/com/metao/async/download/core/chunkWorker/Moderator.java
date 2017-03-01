@@ -1,7 +1,6 @@
 package com.metao.async.download.core.chunkWorker;
 
 import android.util.Log;
-import com.metao.async.repository.Repository;
 import com.metao.async.download.core.enums.TaskStates;
 import com.metao.async.download.core.mainWorker.QueueModerator;
 import com.metao.async.download.database.ChunksDataSource;
@@ -10,6 +9,7 @@ import com.metao.async.download.database.elements.Chunk;
 import com.metao.async.download.database.elements.Task;
 import com.metao.async.download.report.ReportStructure;
 import com.metao.async.download.report.listener.DownloadManagerListenerModerator;
+import com.metao.async.repository.Repository;
 
 import java.util.HashMap;
 import java.util.List;
@@ -100,8 +100,7 @@ public class Moderator {
             // notify developer
 
             // pause task asyncWorker
-            List<Chunk> taskChunks =
-                    chunksDataSource.chunksRelatedTask(task.id);
+            List<Chunk> taskChunks = chunksDataSource.chunksRelatedTask(task.id);
             for (Chunk chunk : taskChunks) {
                 Thread worker = workerList.get(chunk.id);
                 if (worker != null) {
@@ -128,18 +127,14 @@ public class Moderator {
     public void process(String taskId, long byteRead) {
         ReportStructure report = processReports.get(taskId);
         double percent = -1;
-        long downloadLength = report
-                .setDownloadLength(byteRead);
-
+        long downloadLength = report.setDownloadLength(byteRead);
         downloadByteThreshold += byteRead;
-        if (downloadByteThreshold > THRESHOLD) {
-            downloadByteThreshold = 0;
-            if (report.isResumable()) {
-                percent = ((float) downloadLength / report.getTotalSize() * 100);
-            }
-            // notify to developer------------------------------------------------------------
-            downloadManagerListener.onDownloadProcess(taskId, percent, downloadLength);
+        downloadByteThreshold = 0;
+        if (report.isResumable()) {
+            percent = ((float) downloadLength / report.getTotalSize() * 100);
         }
+        // notify to developer------------------------------------------------------------
+        downloadManagerListener.onDownloadProcess(taskId, byteRead, downloadLength);
     }
 
     public void rebuild(Chunk chunk) {
@@ -154,11 +149,11 @@ public class Moderator {
         // set state task state to finished
         task.state = TaskStates.DOWNLOAD_FINISHED;
         tasksDataSource.update(task);
-
         // notify to developer------------------------------------------------------------
         downloadManagerListener.OnDownloadFinished(task.id);
 
         // assign chunk files together
+
         Thread t = new Builder(task, taskChunks, this);
         t.start();
     }
@@ -167,9 +162,7 @@ public class Moderator {
         // delete chunk row from chunk table
         for (Chunk chunk : taskChunks) {
             chunksDataSource.delete(chunk.id);
-            repository.delete(task.id);
         }
-
         // notify
         downloadManagerListener.OnDownloadRebuildFinished(task.id);
 
@@ -179,7 +172,6 @@ public class Moderator {
         tasksDataSource.update(task);
         // notify
         downloadManagerListener.OnDownloadCompleted(task.id);
-
         wakeUpObserver(task.id);
     }
 

@@ -73,9 +73,8 @@ public class AsyncStartDownload extends Thread {
             case TaskStates.DOWNLOAD_FINISHED:
                 // -->rebuild general file
                 // -->save in database
-                // -->report to user
-                Thread rb = new Builder(task,
-                        chunksDataSource.chunksRelatedTask(task.id), moderator);
+                // -->report to user4
+                Thread rb = new Builder(task, chunksDataSource.chunksRelatedTask(task.id), moderator);
                 rb.run();
             case TaskStates.END:
 
@@ -154,8 +153,9 @@ public class AsyncStartDownload extends Thread {
     }
 
     private void makeFileForChunks(int firstId, Task task) {
-        for (int endId = firstId + task.chunks; firstId < endId; firstId++)
+        for (int endId = firstId + task.chunks; firstId < endId; firstId++){
             repository.put(task.id, task);
+        }
     }
 
     private void deleteChunk(Task task) {
@@ -167,8 +167,7 @@ public class AsyncStartDownload extends Thread {
     }
 
     private void generateNewChunk(Task task) {
-        int firstChunkID =
-                chunksDataSource.insertChunks(task);
+        int firstChunkID = chunksDataSource.insertChunks(task);
         makeFileForChunks(firstChunkID, task);
     }
 }
