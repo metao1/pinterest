@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 
 import java.util.List;
 
+import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertNotNull;
 
 /**
