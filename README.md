@@ -125,3 +125,27 @@ public enum RepositoryType {
         STRING(5);//String conversion on an Object       
     }
 ```
+
+#### Using Cache
+
+The Library uses cache for soring data next time on each call to save network bandwith. However you can disable or enable this feature
+which is enabled by default.
+
+```java
+repository.addSerivce(JSON_API_URL_ADDRESS
+    , new RepositoryCallback<Model>() {
+    @Override
+    public void onDownloadFinished(String urlAddress,Model response) {
+        //Maybe set data to Adapters
+        // The Model can be any thing including List<Model> etc
+    }
+                    
+    public void onError(Throwable error) {
+        //Raise an error message
+    }
+                    
+    public void onDownloadProgress(String urlAddress, double progress) {
+        // Showing progress if the service supports
+    }
+}).useCache(false);//disable using cache
+```

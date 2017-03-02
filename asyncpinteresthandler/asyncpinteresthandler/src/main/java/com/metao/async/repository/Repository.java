@@ -29,7 +29,6 @@ public class Repository<T> {
     private RepositoryType repositoryType = RepositoryType.STRING;
     private RepositoryCacheRamMode ramMode;
     private String repoName;
-    private boolean useCacheIsValid = true;
 
     public Repository(String repoName) {
         this.type = getSuperclassTypeParameter(getClass());
@@ -57,7 +56,7 @@ public class Repository<T> {
 
     public Repository<T> addService(final String url
             , RepositoryCallback<T> repositoryCallback) {
-        if (serviceCacheRepository.snapshot().containsKey(url) && useCacheIsValid) {//check cache for data availability
+        if (serviceCacheRepository.snapshot().containsKey(url)) {//check cache for data availability
             T t = serviceCacheRepository.snapshot().get(url);
             repositoryCallback.onDownloadFinished(url, t);
             Log.d("tag", "using cache");
@@ -85,8 +84,8 @@ public class Repository<T> {
         return this;
     }
 
-    public Repository<T> downloadBitmapIntoImageView(final String url, final ImageView imageView) {
-        if (bitmapCacheRepository.snapshot().containsKey(url) && useCacheIsValid) {//check cache for data availability
+    public Repository<T> downloadBitmapIntoImageView(final String url, ImageView imageView) {
+        if (bitmapCacheRepository.snapshot().containsKey(url)) {//check cache for data availability
             Log.d("tag", "using cache");
             Bitmap bitmap = bitmapCacheRepository.snapshot().get(url);
             if (bitmap != null) {
@@ -105,7 +104,6 @@ public class Repository<T> {
                 public void onDownloadFinished(String taskId, Bitmap bitmap) {
                     if (imageViewRepositoryCache.contains(taskId)) {
                         imageViewRepositoryCache.get(taskId).setImageBitmap(bitmap);
-                        imageView.setImageBitmap(bitmap);
                         bitmapCacheRepository.put(url, bitmap);
                     }
                 }
@@ -118,13 +116,8 @@ public class Repository<T> {
         return this;
     }
 
-    public Repository<T> useCache(boolean use) {
-        this.useCacheIsValid = use;
-        return this;
-    }
-
     public Repository<T> downloadBitmapIntoViewHolder(final String url, RepositoryCallbackInterface<Bitmap> viewHolder) {
-        if (bitmapCacheRepository.snapshot().containsKey(url) && useCacheIsValid) {//check cache for data availability
+        if (bitmapCacheRepository.snapshot().containsKey(url)) {//check cache for data availability
             Bitmap bitmap = bitmapCacheRepository.snapshot().get(url);
             if (bitmap != null) {
                 viewHolder.onDownloadFinished(url, bitmap);
@@ -138,7 +131,7 @@ public class Repository<T> {
             messageArg.setUrl(url);
             viewHolderCacheRepository.put(taskId, viewHolder);
             bitmapDownloadHandler = new DownloadHandler<>();
-            bitmapDownloadHandler.setRepoCallback(taskId, new RepositoryCallback<Bitmap>() {
+            bitmapDownloadHandler.setRepoCallback(url, new RepositoryCallback<Bitmap>() {
                 @Override
                 public void onDownloadFinished(String taskId, Bitmap bitmap) {
                     if (viewHolderCacheRepository.contains(taskId)) {
