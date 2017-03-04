@@ -16,9 +16,6 @@ buildscript {
 }
 test {
     useTestNG()
-    useJUnit {
-        includeCategories 'com/metao/asyncpinteresthandler/configurationToTest./**'
-    }
     minHeapSize = "128m"
     maxHeapSize = "512m"
     jvmArgs '-XX:MaxPermSize=256m'
